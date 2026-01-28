@@ -126,12 +126,8 @@
 
             <div class="space-y-4 relative z-10">
                 <button onclick="App.auth.guest()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-4 font-bold border-l-4 border-slate-500 hover:border-white transition flex items-center justify-center gap-3 group">
-                    <span>VIEW AS GUEST</span>
+                    <span>ENTER AS GUEST</span>
                     <i class="fa-solid fa-arrow-right opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                </button>
-                
-                <button onclick="App.ui.toggleModal('public-reg-modal', true)" class="w-full bg-cyber-purple hover:bg-purple-600 text-white font-bold py-4 border-l-4 border-cyber-pink shadow-[0_0_20px_rgba(112,0,223,0.3)] transition transform hover:translate-x-1 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-user-plus"></i> JOIN TOURNAMENT
                 </button>
             </div>
 
@@ -232,7 +228,7 @@
             
             <div class="p-4 border-t border-white/10 bg-black/40 flex justify-end gap-3">
                  <button onclick="App.ui.toggleModal('public-reg-modal', false)" class="px-6 py-3 font-bold text-slate-400 hover:text-white uppercase">Cancel</button>
-                <button onclick="App.logic.submitPlayerForm()" class="btn-cyber bg-cyber-cyan text-black font-display text-xl uppercase px-8 py-3 hover:bg-white hover:scale-105 transition shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                <button onclick="App.data.savePlayer()" class="btn-cyber bg-cyber-cyan text-black font-display text-xl uppercase px-8 py-3 hover:bg-white hover:scale-105 transition shadow-[0_0_15px_rgba(0,240,255,0.4)]">
                     Save Player
                 </button>
             </div>
@@ -293,10 +289,10 @@
             <div class="p-4 border-t border-white/5">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyber-cyan to-blue-600 p-[1px]">
-                        <img src="https://ui-avatars.com/api/?name=Guest&background=000&color=fff" class="rounded-full w-full h-full">
+                        <img id="user-avatar" src="https://ui-avatars.com/api/?name=Guest&background=000&color=fff" class="rounded-full w-full h-full">
                     </div>
                     <div class="hidden lg:block">
-                        <div class="text-xs font-bold text-white">Guest User</div>
+                        <div id="user-display-name" class="text-xs font-bold text-white">Guest User</div>
                         <div class="text-[9px] text-emerald-500 font-bold uppercase"><i class="fa-solid fa-circle text-[6px] animate-pulse"></i> Online</div>
                     </div>
                 </div>
@@ -343,14 +339,13 @@
                     
                     <!-- Chat Area -->
                     <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll font-mono text-xs">
-                        <!-- JS Generated Chat -->
-                        <div class="text-slate-400 text-center text-[10px] my-4">Welcome to the chat room!</div>
+                        <div class="text-slate-500 text-center text-[10px] my-4 italic">Loading chat history...</div>
                     </div>
 
                     <!-- Chat Input -->
                     <div class="p-3 border-t border-white/10 bg-cyber-dark">
-                        <form onsubmit="event.preventDefault(); App.logic.sendChat();" class="flex gap-2">
-                            <input type="text" id="chat-input" placeholder="Send a message..." class="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:border-cyber-cyan outline-none text-xs">
+                        <form onsubmit="event.preventDefault(); App.data.sendChat();" class="flex gap-2">
+                            <input type="text" id="chat-input" placeholder="Say something..." class="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:border-cyber-cyan outline-none text-xs">
                             <button class="bg-cyber-cyan text-black px-3 rounded font-bold hover:bg-white"><i class="fa-solid fa-paper-plane"></i></button>
                         </form>
                     </div>
@@ -450,6 +445,7 @@
                 <div class="flex-1 overflow-y-auto custom-scroll p-6">
                     <div id="roster-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         <!-- JS Rendered -->
+                        <div class="col-span-full text-center text-slate-500 py-10 animate-pulse">Loading Players from Database...</div>
                     </div>
                 </div>
             </section>
@@ -521,452 +517,4 @@
                     <span class="text-[9px] font-bold uppercase tracking-wide">${label}</span>
                 </button>`;
             document.write(mobileNavItem('live', 'fa-gamepad', 'Live'));
-            document.write(mobileNavItem('matches', 'fa-trophy', 'Match'));
-            document.write(mobileNavItem('roster', 'fa-users', 'Roster'));
-            document.write(mobileNavItem('admin', 'fa-database', 'Admin')); // Hidden via CSS if not admin
-        </script>
-    </nav>
-
-    <!-- ================= LOGIC ================= -->
-    <script>
-        // CONFIG
-        const SUPABASE_URL = 'https://airrabkojxzzilgdcraz.supabase.co'; // Keep existing logic
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpcnJhYmtvanh6emlsZ2RjcmF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NjY4MjEsImV4cCI6MjA3NDQ0MjgyMX0._XUe8Mk7jjY4RGyzaJ44mN5slfIP8pPYLNjcJYQkg-g';
-        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // MOCK DATA (To make it work immediately for demo without DB connection)
-        const MOCK_PLAYERS = [
-            { id: 1, name: 'ShadowSlayer', age: 22, category: 'Legend', group_name: 'Neon Strikers', games: ['Mobile Legends'], photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80' },
-            { id: 2, name: 'HoopsKing', age: 25, category: 'Pro', group_name: 'Team Alpha', games: ['Basketball'], photo: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80' },
-            { id: 3, name: 'SniperWolf', age: 21, category: 'Rookie', group_name: 'Dark Side', games: ['Billiards', 'Mobile Legends'], photo: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=150&q=80' },
-            { id: 4, name: 'Viper', age: 24, category: 'Amateur', group_name: 'Team Alpha', games: ['Basketball'], photo: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80' },
-        ];
-
-        // APP NAMESPACE
-        const App = {
-            state: {
-                isAdmin: false,
-                players: [...MOCK_PLAYERS], // Initialize with mock
-                currentView: 'live',
-                tempPhoto: null
-            },
-            
-            // UI & Navigation
-            ui: {
-                toggleModal: (id, show) => {
-                    const el = document.getElementById(id);
-                    if(show) { el.classList.remove('hidden'); el.classList.add('flex'); }
-                    else { el.classList.add('hidden'); el.classList.remove('flex'); App.camera.stop(); }
-                },
-                openCreateModal: () => {
-                    document.getElementById('modal-title').innerText = "NEW PLAYER REGISTRATION";
-                    document.getElementById('crud-mode').value = 'create';
-                    document.getElementById('pub-name').value = '';
-                    document.getElementById('pub-age').value = '';
-                    document.getElementById('pub-preview').src = 'https://via.placeholder.com/150?text=NO+PHOTO';
-                    // Uncheck boxes
-                    document.querySelectorAll('.pub-game').forEach(c => c.checked = false);
-                    App.ui.toggleModal('public-reg-modal', true);
-                },
-                toast: (msg, icon = 'success') => {
-                    const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, background: '#0f172a', color: '#fff', iconColor: '#00f0ff' });
-                    Toast.fire({ icon: icon, title: msg });
-                }
-            },
-
-            nav: {
-                go: (viewId) => {
-                    // Auth Check for Admin View
-                    if(viewId === 'admin' && !App.state.isAdmin) return App.ui.toast("Access Denied", "error");
-
-                    App.state.currentView = viewId;
-                    
-                    // Hide all sections
-                    document.querySelectorAll('section').forEach(el => el.classList.add('hidden'));
-                    document.getElementById(`view-${viewId}`).classList.remove('hidden');
-                    
-                    // Update Nav Styles
-                    const ids = ['live', 'matches', 'roster', 'admin'];
-                    ids.forEach(id => {
-                        const dBtn = document.getElementById(`nav-d-${id}`);
-                        const mBtn = document.getElementById(`nav-m-${id}`);
-                        
-                        // Desktop Reset
-                        if(dBtn) {
-                            dBtn.querySelector('div').classList.remove('opacity-100', 'h-full');
-                            dBtn.querySelector('div').classList.add('opacity-0', 'h-0');
-                            dBtn.querySelector('i').classList.remove('text-cyber-cyan', 'text-glow');
-                            dBtn.querySelector('span').classList.remove('text-white');
-                            dBtn.classList.remove('bg-white/5');
-                        }
-                        // Mobile Reset
-                        if(mBtn) {
-                            mBtn.classList.remove('text-cyber-cyan', 'border-cyber-cyan', 'bg-white/5');
-                            mBtn.classList.add('text-slate-500', 'border-transparent');
-                        }
-                    });
-
-                    // Active State Desktop
-                    const activeD = document.getElementById(`nav-d-${viewId}`);
-                    if(activeD) {
-                        activeD.classList.add('bg-white/5');
-                        activeD.querySelector('div').classList.remove('opacity-0', 'h-0');
-                        activeD.querySelector('div').classList.add('opacity-100', 'h-full');
-                        activeD.querySelector('i').classList.add('text-cyber-cyan', 'text-glow');
-                        activeD.querySelector('span').classList.add('text-white');
-                    }
-                    
-                    // Active State Mobile
-                    const activeM = document.getElementById(`nav-m-${viewId}`);
-                    if(activeM) {
-                        activeM.classList.remove('text-slate-500', 'border-transparent');
-                        activeM.classList.add('text-cyber-cyan', 'border-cyber-cyan', 'bg-white/5');
-                    }
-
-                    // Side Effects
-                    if(viewId === 'roster') App.logic.renderRoster();
-                    if(viewId === 'admin') App.logic.renderAdminTable();
-                }
-            },
-
-            // Authentication
-            auth: {
-                init: () => {
-                    const role = localStorage.getItem('kw_role');
-                    if(role === 'admin') App.auth.setAdmin(true);
-                    else if(role === 'guest') App.auth.guest(true);
-                    else App.ui.toggleModal('login-modal', true);
-                    
-                    // Start simulations
-                    App.logic.simulateChat();
-                    App.logic.populatePublicGroups();
-                },
-                guest: (silent = false) => {
-                    App.ui.toggleModal('login-modal', false);
-                    App.auth.setAdmin(false);
-                    localStorage.setItem('kw_role', 'guest');
-                    if(!silent) App.ui.toast('Welcome to the Arena');
-                },
-                admin: () => {
-                    const pass = document.getElementById('admin-pass').value;
-                    if(pass === 'admin') { // Hardcoded for demo
-                        App.auth.setAdmin(true);
-                        App.ui.toggleModal('login-modal', false);
-                        localStorage.setItem('kw_role', 'admin');
-                        App.ui.toast('System Access Granted');
-                    } else {
-                        App.ui.toast('Invalid Passcode', 'error');
-                    }
-                },
-                setAdmin: (isAdmin) => {
-                    App.state.isAdmin = isAdmin;
-                    const elements = document.querySelectorAll('.admin-only');
-                    elements.forEach(el => el.classList.toggle('hidden', !isAdmin));
-                    
-                    const badge = document.getElementById('admin-badge');
-                    if(isAdmin) badge.classList.remove('hidden');
-                    else badge.classList.add('hidden');
-
-                    const adminNav = document.getElementById('nav-d-admin');
-                    if(adminNav) adminNav.style.display = isAdmin ? 'flex' : 'none';
-                    const adminNavM = document.getElementById('nav-m-admin');
-                    if(adminNavM) adminNavM.style.display = isAdmin ? 'flex' : 'none';
-                },
-                logout: () => {
-                    localStorage.removeItem('kw_role');
-                    location.reload();
-                }
-            },
-
-            // Camera System
-            camera: {
-                stream: null,
-                toggle: async (prefix) => {
-                    const vid = document.getElementById(`${prefix}-video`);
-                    const img = document.getElementById(`${prefix}-preview`);
-                    const snapBtn = document.getElementById(`${prefix}-snap`);
-                    
-                    if(App.camera.stream) {
-                        App.camera.stop();
-                        vid.classList.add('hidden');
-                        img.classList.remove('hidden');
-                        snapBtn.classList.add('hidden');
-                        return;
-                    }
-
-                    try {
-                        App.camera.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-                        vid.srcObject = App.camera.stream;
-                        vid.classList.remove('hidden');
-                        img.classList.add('hidden');
-                        snapBtn.classList.remove('hidden');
-                    } catch(e) {
-                        App.ui.toast('Camera Access Denied', 'error');
-                    }
-                },
-                snap: (prefix) => {
-                    const vid = document.getElementById(`${prefix}-video`);
-                    const canvas = document.createElement('canvas');
-                    canvas.width = vid.videoWidth;
-                    canvas.height = vid.videoHeight;
-                    const ctx = canvas.getContext('2d');
-                    ctx.translate(canvas.width, 0);
-                    ctx.scale(-1, 1);
-                    ctx.drawImage(vid, 0, 0);
-                    
-                    const data = canvas.toDataURL('image/jpeg');
-                    App.state.tempPhoto = data;
-                    document.getElementById(`${prefix}-preview`).src = data;
-                    App.camera.toggle(prefix); 
-                },
-                handleUpload: (input, imgId) => {
-                    if (input.files && input.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            document.getElementById(imgId).src = e.target.result;
-                            App.state.tempPhoto = e.target.result;
-                        };
-                        reader.readAsDataURL(input.files[0]);
-                    }
-                },
-                stop: () => {
-                    if(App.camera.stream) {
-                        App.camera.stream.getTracks().forEach(t => t.stop());
-                        App.camera.stream = null;
-                    }
-                }
-            },
-
-            // Business Logic
-            logic: {
-                renderRoster: () => {
-                    const grid = document.getElementById('roster-grid');
-                    const filtered = App.logic.getFilteredPlayers();
-                    
-                    grid.innerHTML = filtered.map(p => {
-                        const img = p.photo || `https://ui-avatars.com/api/?name=${p.name}&background=random`;
-                        const borderColor = p.category === 'Legend' ? 'border-yellow-400' : (p.category === 'Pro' ? 'border-cyber-purple' : 'border-slate-700');
-                        
-                        // Game Icons
-                        const gameIcons = p.games.map(g => {
-                            if(g === 'Basketball') return '<i class="fa-solid fa-basketball text-orange-500"></i>';
-                            if(g === 'Mobile Legends') return '<i class="fa-solid fa-mobile text-blue-500"></i>';
-                            return '<i class="fa-solid fa-circle-dot text-green-500"></i>';
-                        }).join(' ');
-
-                        return `
-                        <div class="group relative bg-cyber-panel border-2 ${borderColor} rounded-xl overflow-hidden shadow-lg transition transform hover:-translate-y-2 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)]">
-                            <!-- Image -->
-                            <div class="h-48 w-full bg-slate-800 relative">
-                                <img src="${img}" class="w-full h-full object-cover">
-                                <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black to-transparent h-20"></div>
-                                <div class="absolute bottom-2 left-3">
-                                    <h3 class="text-white font-display text-2xl tracking-wide">${p.name}</h3>
-                                    <p class="text-[10px] text-cyber-cyan uppercase font-bold">${p.group_name || 'Free Agent'}</p>
-                                </div>
-                                <div class="absolute top-2 right-2 bg-black/70 backdrop-blur px-2 py-0.5 rounded text-[10px] uppercase font-bold text-white border border-white/20">
-                                    ${p.category}
-                                </div>
-                            </div>
-                            <!-- Stats / Details (Revealed on hover style) -->
-                            <div class="p-4 bg-cyber-dark/90 relative">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-xs text-slate-500 font-bold">AGE: <span class="text-white">${p.age}</span></span>
-                                    <div class="flex gap-2 text-sm">${gameIcons}</div>
-                                </div>
-                                <div class="w-full h-1 bg-slate-800 rounded overflow-hidden">
-                                    <div class="bg-cyber-cyan h-full" style="width: ${Math.floor(Math.random() * 40 + 60)}%"></div>
-                                </div>
-                                <div class="text-[9px] text-right mt-1 text-cyber-cyan">Win Rate</div>
-                            </div>
-                        </div>`;
-                    }).join('');
-                },
-
-                renderAdminTable: () => {
-                    const tbody = document.getElementById('admin-table-body');
-                    document.getElementById('stat-total-players').innerText = App.state.players.length;
-                    
-                    tbody.innerHTML = App.state.players.map(p => `
-                        <tr class="hover:bg-white/5 transition group">
-                            <td class="px-6 py-4 flex items-center gap-3">
-                                <img src="${p.photo}" class="w-8 h-8 rounded-full border border-slate-600 object-cover">
-                                <span class="font-bold text-white">${p.name}</span>
-                            </td>
-                            <td class="px-6 py-4">${p.group_name}</td>
-                            <td class="px-6 py-4"><span class="bg-slate-800 px-2 py-1 rounded text-xs border border-slate-700">${p.category}</span></td>
-                            <td class="px-6 py-4 text-xs text-slate-400">${p.games.join(', ')}</td>
-                            <td class="px-6 py-4 text-right">
-                                <button onclick="App.logic.editPlayer(${p.id})" class="text-cyber-cyan hover:text-white mr-3"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="App.logic.deletePlayer(${p.id})" class="text-red-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    `).join('');
-                },
-
-                getFilteredPlayers: () => {
-                    const term = document.getElementById('roster-search').value.toLowerCase();
-                    return App.state.players.filter(p => p.name.toLowerCase().includes(term) || (p.group_name && p.group_name.toLowerCase().includes(term)));
-                },
-
-                populatePublicGroups: () => {
-                    const groups = [...new Set(App.state.players.map(p => p.group_name).filter(Boolean))].sort();
-                    let html = '<option value="">-- Select Team --</option>';
-                    groups.forEach(g => html += `<option value="${g}">${g}</option>`);
-                    html += '<option value="NEW" class="font-bold text-cyber-cyan">+ Create New Team</option>';
-                    document.getElementById('pub-group').innerHTML = html;
-                },
-
-                handleGroupSelect: (el) => {
-                    const custom = document.getElementById('pub-group-custom');
-                    if(el.value === 'NEW') { custom.classList.remove('hidden'); custom.focus(); }
-                    else custom.classList.add('hidden');
-                },
-
-                // CRUD OPERATIONS
-                submitPlayerForm: async () => {
-                    const mode = document.getElementById('crud-mode').value;
-                    const id = document.getElementById('crud-id').value;
-                    
-                    const name = document.getElementById('pub-name').value;
-                    const age = document.getElementById('pub-age').value;
-                    const cat = document.getElementById('pub-cat').value;
-                    let group = document.getElementById('pub-group').value;
-                    if(group === 'NEW') group = document.getElementById('pub-group-custom').value;
-                    const games = Array.from(document.querySelectorAll('.pub-game:checked')).map(c => c.value);
-
-                    if(!name || !age || !group) return App.ui.toast('Please fill required fields', 'warning');
-
-                    const playerData = {
-                        name, age, category: cat, group_name: group, games, 
-                        photo: App.state.tempPhoto || document.getElementById('pub-preview').src
-                    };
-
-                    if(mode === 'create') {
-                        // Simulate ID creation
-                        playerData.id = Date.now();
-                        App.state.players.unshift(playerData); // Add to local state
-                        
-                        // DB Insert (Mocked for demo)
-                        // await db.from('players').insert([playerData]);
-                        
-                        App.ui.toast('Player Registered Successfully');
-                    } else {
-                        // Update
-                        const index = App.state.players.findIndex(p => p.id == id);
-                        if(index !== -1) {
-                            App.state.players[index] = { ...App.state.players[index], ...playerData };
-                            App.ui.toast('Player Updated');
-                        }
-                    }
-
-                    App.ui.toggleModal('public-reg-modal', false);
-                    App.state.tempPhoto = null;
-                    if(App.state.currentView === 'admin') App.logic.renderAdminTable();
-                    if(App.state.currentView === 'roster') App.logic.renderRoster();
-                    App.logic.populatePublicGroups();
-                },
-
-                deletePlayer: (id) => {
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: "You won't be able to revert this!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#ff003c',
-                        cancelButtonColor: '#334155',
-                        confirmButtonText: 'Yes, delete it!',
-                        background: '#0f172a',
-                        color: '#fff'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            App.state.players = App.state.players.filter(p => p.id !== id);
-                            App.logic.renderAdminTable();
-                            App.ui.toast('Player Deleted', 'success');
-                        }
-                    })
-                },
-
-                editPlayer: (id) => {
-                    const p = App.state.players.find(p => p.id === id);
-                    if(!p) return;
-
-                    document.getElementById('modal-title').innerText = "EDIT PLAYER";
-                    document.getElementById('crud-mode').value = 'edit';
-                    document.getElementById('crud-id').value = id;
-                    
-                    document.getElementById('pub-name').value = p.name;
-                    document.getElementById('pub-age').value = p.age;
-                    document.getElementById('pub-cat').value = p.category;
-                    
-                    // Handle Group Select
-                    const groupSel = document.getElementById('pub-group');
-                    // Check if group exists in options
-                    let groupExists = false;
-                    for(let i=0; i<groupSel.options.length; i++){
-                        if(groupSel.options[i].value === p.group_name) groupExists = true;
-                    }
-                    if(groupExists) {
-                        groupSel.value = p.group_name;
-                        document.getElementById('pub-group-custom').classList.add('hidden');
-                    } else {
-                        // It might be a new group or custom
-                        groupSel.value = 'NEW';
-                        document.getElementById('pub-group-custom').value = p.group_name;
-                        document.getElementById('pub-group-custom').classList.remove('hidden');
-                    }
-
-                    document.getElementById('pub-preview').src = p.photo;
-                    
-                    // Checkboxes
-                    document.querySelectorAll('.pub-game').forEach(c => c.checked = false);
-                    if(p.games) p.games.forEach(g => {
-                        const cb = document.querySelector(`.pub-game[value="${g}"]`);
-                        if(cb) cb.checked = true;
-                    });
-
-                    App.ui.toggleModal('public-reg-modal', true);
-                },
-
-                // Chat Simulation
-                simulateChat: () => {
-                    const messages = [
-                        "Let's go Team Alpha!", "Nice play!", "What is that build?", "GGWP", 
-                        "Who is winning?", "Stream lag?", "This MVP is crazy", "LOL", "Next match when?"
-                    ];
-                    const users = ["User123", "ProGamer", "Guest99", "Admin", "FanBoy"];
-                    
-                    setInterval(() => {
-                        if(Math.random() > 0.7 && App.state.currentView === 'live') {
-                            const msg = messages[Math.floor(Math.random() * messages.length)];
-                            const user = users[Math.floor(Math.random() * users.length)];
-                            App.logic.addChatMessage(user, msg);
-                        }
-                    }, 3000);
-                },
-
-                addChatMessage: (user, msg) => {
-                    const container = document.getElementById('chat-container');
-                    const color = user === 'Admin' ? 'text-cyber-pink' : 'text-cyber-cyan';
-                    const div = document.createElement('div');
-                    div.innerHTML = `<span class="font-bold ${color}">${user}:</span> <span class="text-slate-300 break-words">${msg}</span>`;
-                    container.appendChild(div);
-                    container.scrollTop = container.scrollHeight;
-                },
-
-                sendChat: () => {
-                    const input = document.getElementById('chat-input');
-                    if(input.value.trim()) {
-                        App.logic.addChatMessage('You', input.value);
-                        input.value = '';
-                    }
-                }
-            }
-        };
-
-        // Initialize
-        window.addEventListener('DOMContentLoaded', App.auth.init);
-
-    </script>
-</body>
-</html>
+            document.write(
