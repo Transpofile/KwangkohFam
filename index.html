@@ -43,11 +43,17 @@
                     animation: {
                         'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'glow': 'glow 2s ease-in-out infinite alternate',
+                        'glitch': 'glitch 1s linear infinite',
                     },
                     keyframes: {
                         glow: {
                             '0%': { boxShadow: '0 0 5px #00f0ff' },
                             '100%': { boxShadow: '0 0 20px #00f0ff, 0 0 10px #7000df' }
+                        },
+                        glitch: {
+                            '2%, 64%': { transform: 'translate(2px,0) skew(0deg)' },
+                            '4%, 60%': { transform: 'translate(-2px,0) skew(0deg)' },
+                            '62%': { transform: 'translate(0,0) skew(5deg)' }
                         }
                     }
                 }
@@ -67,45 +73,35 @@
 
         /* Glass Panel 2.0 */
         .glass-panel {
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(0, 240, 255, 0.1);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
 
-        .cyber-border {
-            position: relative;
-        }
-        .cyber-border::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px;
-            background: linear-gradient(90deg, transparent, #00f0ff, transparent);
-        }
-        .cyber-border::after {
-            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 1px;
-            background: linear-gradient(90deg, transparent, #7000df, transparent);
-        }
-
-        /* Bracket Tree Lines */
-        .bracket-line { border-right: 2px solid #334155; border-top: 2px solid #334155; border-radius: 0 10px 0 0; }
-        .bracket-connector { border-bottom: 2px solid #334155; }
-
-        /* Animations */
-        .page-transition { animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); scale: 0.98; } to { opacity: 1; transform: translateY(0); scale: 1; } }
-
-        /* Ticker */
-        .ticker-wrap { overflow: hidden; white-space: nowrap; }
-        .ticker { display: inline-block; animation: ticker 30s linear infinite; }
-        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-
         /* Utilities */
         .text-glow { text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .text-glow-pink { text-shadow: 0 0 10px rgba(255, 0, 60, 0.5); }
+        
         .btn-cyber {
             clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
             transition: all 0.2s;
         }
         .btn-cyber:active { transform: scale(0.95); }
+
+        /* Glitch Text */
+        .glitch-text { position: relative; }
+        .glitch-text::before, .glitch-text::after {
+            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        }
+        .glitch-text::before { left: 2px; text-shadow: -1px 0 #ff003c; clip: rect(24px, 550px, 90px, 0); animation: glitch 3s infinite linear alternate-reverse; }
+        .glitch-text::after { left: -2px; text-shadow: -1px 0 #00f0ff; clip: rect(85px, 550px, 140px, 0); animation: glitch 2s infinite linear alternate-reverse; }
+        
+        /* Ticker */
+        .ticker-wrap { overflow: hidden; white-space: nowrap; }
+        .ticker { display: inline-block; animation: ticker 30s linear infinite; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
     </style>
 </head>
 <body class="text-slate-300 font-sans h-[100dvh] flex flex-col bg-cyber-base selection:bg-cyber-cyan selection:text-black">
@@ -116,25 +112,63 @@
 
     <!-- ================= MODALS ================= -->
 
-    <!-- LOGIN MODAL -->
+    <!-- LOGIN / AUTH MODAL -->
     <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-        <div class="glass-panel p-8 rounded-none btn-cyber w-full max-w-sm text-center relative overflow-hidden group">
-            <div class="absolute inset-0 bg-gradient-to-b from-cyber-cyan/10 to-transparent pointer-events-none"></div>
+        <div class="glass-panel w-full max-w-md relative overflow-hidden group flex flex-col">
+            <!-- Decorative Header -->
+            <div class="h-2 bg-gradient-to-r from-cyber-cyan via-cyber-purple to-cyber-pink w-full"></div>
             
-            <h2 class="text-6xl font-display font-bold text-white mb-0 italic tracking-tighter text-glow">KWANGKOH</h2>
-            <p class="text-xs tracking-[0.5em] text-cyber-cyan uppercase mb-8 font-bold border-b border-cyber-cyan/30 pb-4">9th Anniversary Edition</p>
+            <div class="p-8 text-center">
+                <h2 class="text-6xl font-display font-bold text-white mb-0 italic tracking-tighter glitch-text" data-text="KWANGKOH">KWANGKOH</h2>
+                <p class="text-xs tracking-[0.5em] text-cyber-cyan uppercase mb-8 font-bold border-b border-cyber-cyan/30 pb-4">9th Anniversary Edition</p>
 
-            <div class="space-y-4 relative z-10">
-                <button onclick="App.auth.guest()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-4 font-bold border-l-4 border-slate-500 hover:border-white transition flex items-center justify-center gap-3 group">
-                    <span>ENTER AS GUEST</span>
-                    <i class="fa-solid fa-arrow-right opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                </button>
+                <!-- Auth Tabs -->
+                <div class="grid grid-cols-2 gap-2 mb-6 p-1 bg-black/40 rounded">
+                    <button onclick="App.ui.switchAuthTab('player')" id="tab-player" class="py-2 text-xs font-bold uppercase transition bg-cyber-panel text-white border border-cyber-cyan">Player Login</button>
+                    <button onclick="App.ui.switchAuthTab('guest')" id="tab-guest" class="py-2 text-xs font-bold uppercase transition text-slate-500 hover:text-white">Guest View</button>
+                </div>
+
+                <!-- View: Player Login -->
+                <div id="auth-view-player" class="space-y-4">
+                    <div class="text-left">
+                        <label class="text-[10px] text-cyber-cyan uppercase font-bold block mb-1">Select Existing Profile (Demo)</label>
+                        <select id="login-select" class="w-full bg-slate-900 border border-slate-700 p-3 text-white focus:border-cyber-cyan outline-none mb-2">
+                            <!-- Populated via JS -->
+                        </select>
+                        <button onclick="App.auth.loginAsPlayer()" class="w-full bg-cyber-purple hover:bg-purple-600 text-white font-bold py-3 uppercase tracking-wider transition shadow-[0_0_15px_rgba(112,0,223,0.4)]">
+                            Enter Arena
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 my-2">
+                        <div class="h-[1px] bg-slate-700 flex-1"></div>
+                        <span class="text-[10px] text-slate-500 uppercase">OR</span>
+                        <div class="h-[1px] bg-slate-700 flex-1"></div>
+                    </div>
+
+                    <button onclick="App.ui.toggleModal('public-reg-modal', true)" class="w-full border border-cyber-cyan text-cyber-cyan hover:bg-cyber-cyan hover:text-black font-bold py-3 transition uppercase flex items-center justify-center gap-2 group">
+                        <i class="fa-solid fa-user-plus group-hover:rotate-12 transition"></i> Register New Profile
+                    </button>
+                </div>
+
+                <!-- View: Guest -->
+                <div id="auth-view-guest" class="hidden space-y-4">
+                    <div class="bg-slate-800/50 p-4 border-l-2 border-slate-500 text-left mb-4">
+                        <p class="text-xs text-slate-400">Guest mode allows viewing only. You must be a registered player to participate in matches and use the global chat.</p>
+                    </div>
+                    <button onclick="App.auth.guest()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-4 font-bold border-l-4 border-slate-400 hover:border-white transition flex items-center justify-center gap-3">
+                        <span>CONTINUE AS GUEST</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
             </div>
 
-            <div class="mt-8 pt-6 border-t border-white/5">
-                <div class="flex gap-2 bg-black/50 p-1 border border-slate-800">
-                    <input type="password" id="admin-pass" placeholder="ADMIN PASSCODE" class="flex-1 bg-transparent border-none px-3 py-2 text-sm text-white focus:outline-none placeholder-slate-600 font-mono">
-                    <button onclick="App.auth.admin()" class="bg-cyber-cyan text-black px-4 font-bold hover:bg-white transition"><i class="fa-solid fa-bolt"></i></button>
+            <!-- Admin Footer -->
+            <div class="bg-black/80 p-3 flex justify-between items-center border-t border-white/5">
+                <span class="text-[9px] text-slate-600">v.9.0.1 SYSTEM READY</span>
+                <div class="flex gap-2 items-center">
+                    <input type="password" id="admin-pass" placeholder="PIN" class="bg-transparent border-b border-slate-700 w-12 text-center text-[10px] text-white focus:outline-none focus:border-cyber-pink transition">
+                    <button onclick="App.auth.admin()" class="text-slate-600 hover:text-cyber-pink transition"><i class="fa-solid fa-bolt"></i></button>
                 </div>
             </div>
         </div>
@@ -172,8 +206,8 @@
                 <!-- Form Side -->
                 <div class="flex-1 p-6 overflow-y-auto custom-scroll space-y-5 bg-cyber-grad">
                     <div>
-                        <label class="text-xs text-cyber-cyan font-bold uppercase mb-1 block tracking-wider">Alias / IGN</label>
-                        <input type="text" id="pub-name" class="w-full bg-slate-900/80 border border-slate-700 p-3 text-white focus:border-cyber-cyan outline-none font-bold text-lg rounded-none skew-x-[-10deg]">
+                        <label class="text-xs text-cyber-cyan font-bold uppercase mb-1 block tracking-wider">Alias / IGN (Chat Name)</label>
+                        <input type="text" id="pub-name" class="w-full bg-slate-900/80 border border-slate-700 p-3 text-white focus:border-cyber-cyan outline-none font-bold text-lg rounded-none skew-x-[-10deg]" placeholder="e.g. CyberNinja">
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
@@ -228,8 +262,8 @@
             
             <div class="p-4 border-t border-white/10 bg-black/40 flex justify-end gap-3">
                  <button onclick="App.ui.toggleModal('public-reg-modal', false)" class="px-6 py-3 font-bold text-slate-400 hover:text-white uppercase">Cancel</button>
-                <button onclick="App.data.savePlayer()" class="btn-cyber bg-cyber-cyan text-black font-display text-xl uppercase px-8 py-3 hover:bg-white hover:scale-105 transition shadow-[0_0_15px_rgba(0,240,255,0.4)]">
-                    Save Player
+                <button onclick="App.logic.submitPlayerForm()" class="btn-cyber bg-cyber-cyan text-black font-display text-xl uppercase px-8 py-3 hover:bg-white hover:scale-105 transition shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                    Save & Join
                 </button>
             </div>
         </div>
@@ -247,7 +281,7 @@
                 <i class="fa-solid fa-crown text-lg -rotate-3"></i>
             </div>
             <div class="leading-none">
-                <h1 class="font-display text-3xl tracking-wide text-white italic">KWANGKOH</h1>
+                <h1 class="font-display text-3xl tracking-wide text-white italic glitch-text" data-text="KWANGKOH">KWANGKOH</h1>
                 <div class="flex items-center gap-2">
                     <span class="text-[10px] text-cyber-cyan uppercase tracking-[0.3em] font-bold">Compound 9th Anniv</span>
                 </div>
@@ -259,7 +293,8 @@
                 <i class="fa-solid fa-shield-halved mr-1"></i> Admin Mode
             </div>
             
-            <button onclick="App.auth.logout()" class="text-slate-500 hover:text-white transition">
+            <button onclick="App.auth.logout()" class="text-slate-500 hover:text-white transition group border border-slate-700 rounded px-2 py-1 flex items-center gap-2">
+                <span class="text-[10px] uppercase font-bold group-hover:text-red-500">Disconnect</span>
                 <i class="fa-solid fa-power-off"></i>
             </button>
         </div>
@@ -285,16 +320,11 @@
                     document.write(navItem('admin', 'fa-database', 'Admin Panel')); // Only shows if admin
                 </script>
             </nav>
+            
             <!-- User Status -->
             <div class="p-4 border-t border-white/5">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyber-cyan to-blue-600 p-[1px]">
-                        <img id="user-avatar" src="https://ui-avatars.com/api/?name=Guest&background=000&color=fff" class="rounded-full w-full h-full">
-                    </div>
-                    <div class="hidden lg:block">
-                        <div id="user-display-name" class="text-xs font-bold text-white">Guest User</div>
-                        <div class="text-[9px] text-emerald-500 font-bold uppercase"><i class="fa-solid fa-circle text-[6px] animate-pulse"></i> Online</div>
-                    </div>
+                <div id="sidebar-profile" class="flex items-center gap-3">
+                    <!-- Injected by JS -->
                 </div>
             </div>
         </aside>
@@ -331,7 +361,7 @@
                 </div>
 
                 <!-- Chat/Stats Column -->
-                <div class="w-full md:w-80 lg:w-96 bg-cyber-panel border-l border-white/5 flex flex-col h-[40vh] md:h-full">
+                <div class="w-full md:w-80 lg:w-96 bg-cyber-panel border-l border-white/5 flex flex-col h-[40vh] md:h-full relative">
                     <div class="flex border-b border-white/5">
                         <button class="flex-1 py-3 text-xs font-bold uppercase text-cyber-cyan border-b-2 border-cyber-cyan bg-white/5">Stream Chat</button>
                         <button class="flex-1 py-3 text-xs font-bold uppercase text-slate-500 hover:text-white">Stats</button>
@@ -339,13 +369,23 @@
                     
                     <!-- Chat Area -->
                     <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll font-mono text-xs">
-                        <div class="text-slate-500 text-center text-[10px] my-4 italic">Loading chat history...</div>
+                        <div class="text-slate-500 text-center text-[10px] my-4 border-b border-white/5 pb-2">
+                            Welcome to the Arena. <br>Please be respectful to other players.
+                        </div>
                     </div>
 
-                    <!-- Chat Input -->
-                    <div class="p-3 border-t border-white/10 bg-cyber-dark">
-                        <form onsubmit="event.preventDefault(); App.data.sendChat();" class="flex gap-2">
-                            <input type="text" id="chat-input" placeholder="Say something..." class="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:border-cyber-cyan outline-none text-xs">
+                    <!-- Chat Input Area (Dynamic) -->
+                    <div class="p-3 border-t border-white/10 bg-cyber-dark relative">
+                        <!-- Restricted View (Guest) -->
+                        <div id="chat-restricted" class="absolute inset-0 bg-cyber-dark/95 flex items-center justify-center z-10">
+                            <button onclick="App.ui.openCreateModal()" class="btn-cyber bg-slate-800 text-slate-300 border border-slate-600 px-6 py-2 text-xs font-bold uppercase hover:bg-cyber-cyan hover:text-black hover:border-white transition shadow-[0_0_10px_rgba(0,0,0,0.5)] flex items-center gap-2">
+                                <i class="fa-solid fa-lock text-[10px]"></i> Register To Chat
+                            </button>
+                        </div>
+
+                        <!-- Active View (Player) -->
+                        <form id="chat-form" onsubmit="event.preventDefault(); App.logic.sendChat();" class="flex gap-2">
+                            <input type="text" id="chat-input" placeholder="Send a message..." class="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:border-cyber-cyan outline-none text-xs">
                             <button class="bg-cyber-cyan text-black px-3 rounded font-bold hover:bg-white"><i class="fa-solid fa-paper-plane"></i></button>
                         </form>
                     </div>
@@ -355,10 +395,8 @@
             <!-- VIEW: TOURNAMENTS (Match Center) -->
             <section id="view-matches" class="page-transition absolute inset-0 hidden overflow-y-auto custom-scroll p-4 md:p-8">
                 <div class="max-w-6xl mx-auto space-y-8">
-                    
                     <h2 class="font-display text-4xl text-white italic border-l-4 border-cyber-purple pl-4 text-glow">TOURNAMENT BRACKET</h2>
-
-                    <!-- Visual Bracket -->
+                    <!-- Visual Bracket (Simplified for Demo) -->
                     <div class="glass-panel p-6 overflow-x-auto rounded-xl">
                         <div class="min-w-[800px] flex justify-between items-center text-center">
                             <!-- Round 1 -->
@@ -367,7 +405,6 @@
                                     <div class="text-[10px] text-slate-400">Match 1</div>
                                     <div class="font-bold text-white">Team Alpha</div>
                                     <div class="font-bold text-slate-500">Team Bravo</div>
-                                    <!-- Connectors -->
                                     <div class="absolute top-1/2 -right-8 w-8 h-[1px] bg-slate-600"></div>
                                     <div class="absolute top-1/2 -right-8 w-4 h-12 border-r border-slate-600 translate-y-0"></div>
                                 </div>
@@ -375,7 +412,6 @@
                                     <div class="text-[10px] text-slate-400">Match 2</div>
                                     <div class="font-bold text-white">Neon Strikers</div>
                                     <div class="font-bold text-slate-500">Dark Side</div>
-                                    <!-- Connectors -->
                                     <div class="absolute top-1/2 -right-8 w-8 h-[1px] bg-slate-600"></div>
                                     <div class="absolute bottom-1/2 -right-8 w-4 h-12 border-r border-slate-600 translate-y-0"></div>
                                 </div>
@@ -403,31 +439,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Match Cards Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Card Template -->
-                        <div class="glass-panel rounded-xl overflow-hidden group hover:-translate-y-1 transition duration-300">
-                            <div class="bg-slate-900/50 p-3 flex justify-between items-center border-b border-white/5">
-                                <span class="text-xs font-bold text-cyber-cyan uppercase"><i class="fa-solid fa-basketball mr-1"></i> Basketball</span>
-                                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">TODAY 16:00</span>
-                            </div>
-                            <div class="p-6 flex items-center justify-between">
-                                <div class="text-center">
-                                    <div class="w-12 h-12 rounded-full bg-orange-600/20 text-orange-500 border border-orange-500 flex items-center justify-center text-xl mb-2 mx-auto"><i class="fa-solid fa-shield-cat"></i></div>
-                                    <h4 class="font-display text-xl text-white">TIGERS</h4>
-                                </div>
-                                <div class="text-center px-4">
-                                    <div class="text-3xl font-display font-bold text-white italic">VS</div>
-                                </div>
-                                <div class="text-center">
-                                    <div class="w-12 h-12 rounded-full bg-blue-600/20 text-blue-500 border border-blue-500 flex items-center justify-center text-xl mb-2 mx-auto"><i class="fa-solid fa-dragon"></i></div>
-                                    <h4 class="font-display text-xl text-white">DRAGONS</h4>
-                                </div>
-                            </div>
-                            <button class="w-full py-3 bg-white/5 hover:bg-cyber-cyan hover:text-black transition font-bold text-xs uppercase">View Match Stats</button>
-                        </div>
-                    </div>
                 </div>
             </section>
 
@@ -445,7 +456,6 @@
                 <div class="flex-1 overflow-y-auto custom-scroll p-6">
                     <div id="roster-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         <!-- JS Rendered -->
-                        <div class="col-span-full text-center text-slate-500 py-10 animate-pulse">Loading Players from Database...</div>
                     </div>
                 </div>
             </section>
@@ -517,4 +527,560 @@
                     <span class="text-[9px] font-bold uppercase tracking-wide">${label}</span>
                 </button>`;
             document.write(mobileNavItem('live', 'fa-gamepad', 'Live'));
-            document.write(
+            document.write(mobileNavItem('matches', 'fa-trophy', 'Match'));
+            document.write(mobileNavItem('roster', 'fa-users', 'Roster'));
+            document.write(mobileNavItem('admin', 'fa-database', 'Admin')); // Hidden via CSS if not admin
+        </script>
+    </nav>
+
+    <!-- ================= LOGIC ================= -->
+    <script>
+        // CONFIG & MOCK DATA
+        const MOCK_PLAYERS = [
+            { id: 1, name: 'ShadowSlayer', age: 22, category: 'Legend', group_name: 'Neon Strikers', games: ['Mobile Legends'], photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80' },
+            { id: 2, name: 'HoopsKing', age: 25, category: 'Pro', group_name: 'Team Alpha', games: ['Basketball'], photo: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80' },
+            { id: 3, name: 'SniperWolf', age: 21, category: 'Rookie', group_name: 'Dark Side', games: ['Billiards', 'Mobile Legends'], photo: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=150&q=80' },
+            { id: 4, name: 'Viper', age: 24, category: 'Amateur', group_name: 'Team Alpha', games: ['Basketball'], photo: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80' },
+        ];
+
+        const App = {
+            state: {
+                role: 'guest', // guest, player, admin
+                currentUser: null, // Object if player
+                players: [...MOCK_PLAYERS],
+                currentView: 'live',
+                tempPhoto: null
+            },
+            
+            // UI & Navigation
+            ui: {
+                toggleModal: (id, show) => {
+                    const el = document.getElementById(id);
+                    if(show) { el.classList.remove('hidden'); el.classList.add('flex'); }
+                    else { el.classList.add('hidden'); el.classList.remove('flex'); App.camera.stop(); }
+                },
+                switchAuthTab: (tab) => {
+                    document.getElementById('auth-view-player').classList.toggle('hidden', tab !== 'player');
+                    document.getElementById('auth-view-guest').classList.toggle('hidden', tab !== 'guest');
+                    
+                    document.getElementById('tab-player').classList.toggle('bg-cyber-panel', tab === 'player');
+                    document.getElementById('tab-player').classList.toggle('border-cyber-cyan', tab === 'player');
+                    document.getElementById('tab-player').classList.toggle('text-white', tab === 'player');
+                    
+                    document.getElementById('tab-guest').classList.toggle('bg-cyber-panel', tab === 'guest');
+                    document.getElementById('tab-guest').classList.toggle('border-cyber-cyan', tab === 'guest');
+                    document.getElementById('tab-guest').classList.toggle('text-white', tab === 'guest');
+                },
+                openCreateModal: () => {
+                    // Close login modal if open
+                    App.ui.toggleModal('login-modal', false);
+                    document.getElementById('modal-title').innerText = "NEW PLAYER REGISTRATION";
+                    document.getElementById('crud-mode').value = 'create';
+                    document.getElementById('pub-name').value = '';
+                    document.getElementById('pub-age').value = '';
+                    document.getElementById('pub-preview').src = 'https://via.placeholder.com/150?text=NO+PHOTO';
+                    document.querySelectorAll('.pub-game').forEach(c => c.checked = false);
+                    App.ui.toggleModal('public-reg-modal', true);
+                },
+                toast: (msg, icon = 'success') => {
+                    const Toast = Swal.mixin({ 
+                        toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, 
+                        background: '#0f172a', color: '#fff', iconColor: '#00f0ff',
+                        customClass: { popup: 'border border-cyber-cyan shadow-[0_0_10px_#00f0ff]' }
+                    });
+                    Toast.fire({ icon: icon, title: msg });
+                },
+                updateSidebarProfile: () => {
+                    const container = document.getElementById('sidebar-profile');
+                    if(App.state.role === 'player' && App.state.currentUser) {
+                        const p = App.state.currentUser;
+                        container.innerHTML = `
+                             <div class="w-10 h-10 rounded-full border-2 border-cyber-cyan p-[2px] shadow-[0_0_10px_#00f0ff]">
+                                <img src="${p.photo}" class="rounded-full w-full h-full object-cover">
+                            </div>
+                            <div class="hidden lg:block">
+                                <div class="text-sm font-display font-bold text-white tracking-wide">${p.name}</div>
+                                <div class="text-[10px] text-emerald-500 font-bold uppercase"><i class="fa-solid fa-circle text-[6px] animate-pulse"></i> Online</div>
+                            </div>
+                        `;
+                    } else if(App.state.role === 'admin') {
+                         container.innerHTML = `
+                            <div class="w-10 h-10 rounded-full bg-red-900 border border-red-500 flex items-center justify-center text-red-500">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div class="hidden lg:block">
+                                <div class="text-sm font-bold text-red-500">ADMINISTRATOR</div>
+                                <div class="text-[10px] text-slate-500">System Control</div>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-slate-400">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div class="hidden lg:block">
+                                <div class="text-xs font-bold text-white">Guest User</div>
+                                <div class="text-[9px] text-slate-500 uppercase">View Only</div>
+                            </div>
+                        `;
+                    }
+                },
+                updateChatAccess: () => {
+                    const restricted = document.getElementById('chat-restricted');
+                    // Player or Admin can chat
+                    if(App.state.role === 'player' || App.state.role === 'admin') {
+                        restricted.classList.add('hidden');
+                    } else {
+                        restricted.classList.remove('hidden');
+                    }
+                }
+            },
+
+            nav: {
+                go: (viewId) => {
+                    if(viewId === 'admin' && App.state.role !== 'admin') return App.ui.toast("Access Denied", "error");
+                    App.state.currentView = viewId;
+                    
+                    document.querySelectorAll('section').forEach(el => el.classList.add('hidden'));
+                    document.getElementById(`view-${viewId}`).classList.remove('hidden');
+                    
+                    // Update Nav Styles
+                    ['live', 'matches', 'roster', 'admin'].forEach(id => {
+                        const dBtn = document.getElementById(`nav-d-${id}`);
+                        const mBtn = document.getElementById(`nav-m-${id}`);
+                        
+                        if(dBtn) {
+                            dBtn.querySelector('div').classList.remove('opacity-100', 'h-full');
+                            dBtn.querySelector('div').classList.add('opacity-0', 'h-0');
+                            dBtn.querySelector('i').classList.remove('text-cyber-cyan', 'text-glow');
+                            dBtn.classList.remove('bg-white/5');
+                        }
+                        if(mBtn) {
+                            mBtn.classList.remove('text-cyber-cyan', 'border-cyber-cyan', 'bg-white/5');
+                            mBtn.classList.add('text-slate-500', 'border-transparent');
+                        }
+                    });
+
+                    const activeD = document.getElementById(`nav-d-${viewId}`);
+                    if(activeD) {
+                        activeD.classList.add('bg-white/5');
+                        activeD.querySelector('div').classList.remove('opacity-0', 'h-0');
+                        activeD.querySelector('div').classList.add('opacity-100', 'h-full');
+                        activeD.querySelector('i').classList.add('text-cyber-cyan', 'text-glow');
+                    }
+                    
+                    const activeM = document.getElementById(`nav-m-${viewId}`);
+                    if(activeM) {
+                        activeM.classList.remove('text-slate-500', 'border-transparent');
+                        activeM.classList.add('text-cyber-cyan', 'border-cyber-cyan', 'bg-white/5');
+                    }
+
+                    if(viewId === 'roster') App.logic.renderRoster();
+                    if(viewId === 'admin') App.logic.renderAdminTable();
+                }
+            },
+
+            // Authentication
+            auth: {
+                init: () => {
+                    // Populate login select
+                    const select = document.getElementById('login-select');
+                    App.state.players.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.text = p.name;
+                        select.appendChild(opt);
+                    });
+
+                    // Check stored session
+                    const storedRole = localStorage.getItem('kw_role');
+                    const storedId = localStorage.getItem('kw_uid');
+
+                    if(storedRole === 'admin') App.auth.setRole('admin');
+                    else if(storedRole === 'player' && storedId) {
+                        const p = App.state.players.find(x => x.id == storedId);
+                        if(p) {
+                            App.state.currentUser = p;
+                            App.auth.setRole('player');
+                        } else {
+                            App.ui.toggleModal('login-modal', true);
+                        }
+                    } else {
+                        App.ui.toggleModal('login-modal', true);
+                    }
+                    
+                    App.logic.simulateChat();
+                    App.logic.populatePublicGroups();
+                },
+                guest: () => {
+                    App.ui.toggleModal('login-modal', false);
+                    App.auth.setRole('guest');
+                    App.ui.toast('Welcome, Guest');
+                },
+                loginAsPlayer: () => {
+                    const id = document.getElementById('login-select').value;
+                    const p = App.state.players.find(x => x.id == id);
+                    if(p) {
+                        App.state.currentUser = p;
+                        App.auth.setRole('player');
+                        localStorage.setItem('kw_uid', id);
+                        App.ui.toggleModal('login-modal', false);
+                        App.ui.toast(`Welcome back, ${p.name}`);
+                    }
+                },
+                admin: () => {
+                    const pass = document.getElementById('admin-pass').value;
+                    if(pass === '999') { // Demo pass
+                        App.auth.setRole('admin');
+                        App.ui.toggleModal('login-modal', false);
+                        App.ui.toast('Admin Access Granted');
+                    } else {
+                        App.ui.toast('Invalid PIN', 'error');
+                    }
+                },
+                setRole: (role) => {
+                    App.state.role = role;
+                    localStorage.setItem('kw_role', role);
+                    
+                    // Toggle Admin UI elements
+                    const adminNav = document.getElementById('nav-d-admin');
+                    if(adminNav) adminNav.style.display = role === 'admin' ? 'flex' : 'none';
+                    const adminBadge = document.getElementById('admin-badge');
+                    if(role === 'admin') adminBadge.classList.remove('hidden'); else adminBadge.classList.add('hidden');
+
+                    App.ui.updateSidebarProfile();
+                    App.ui.updateChatAccess();
+                },
+                logout: () => {
+                    localStorage.removeItem('kw_role');
+                    localStorage.removeItem('kw_uid');
+                    location.reload();
+                }
+            },
+
+            // Camera System
+            camera: {
+                stream: null,
+                toggle: async (prefix) => {
+                    const vid = document.getElementById(`${prefix}-video`);
+                    const img = document.getElementById(`${prefix}-preview`);
+                    const snapBtn = document.getElementById(`${prefix}-snap`);
+                    
+                    if(App.camera.stream) {
+                        App.camera.stop();
+                        vid.classList.add('hidden');
+                        img.classList.remove('hidden');
+                        snapBtn.classList.add('hidden');
+                        return;
+                    }
+
+                    try {
+                        App.camera.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                        vid.srcObject = App.camera.stream;
+                        vid.classList.remove('hidden');
+                        img.classList.add('hidden');
+                        snapBtn.classList.remove('hidden');
+                    } catch(e) {
+                        App.ui.toast('Camera Access Denied', 'error');
+                    }
+                },
+                snap: (prefix) => {
+                    const vid = document.getElementById(`${prefix}-video`);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = vid.videoWidth;
+                    canvas.height = vid.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.translate(canvas.width, 0);
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(vid, 0, 0);
+                    
+                    const data = canvas.toDataURL('image/jpeg');
+                    App.state.tempPhoto = data;
+                    document.getElementById(`${prefix}-preview`).src = data;
+                    App.camera.toggle(prefix); 
+                },
+                handleUpload: (input, imgId) => {
+                    if (input.files && input.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            document.getElementById(imgId).src = e.target.result;
+                            App.state.tempPhoto = e.target.result;
+                        };
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                },
+                stop: () => {
+                    if(App.camera.stream) {
+                        App.camera.stream.getTracks().forEach(t => t.stop());
+                        App.camera.stream = null;
+                    }
+                }
+            },
+
+            // Business Logic
+            logic: {
+                renderRoster: () => {
+                    const grid = document.getElementById('roster-grid');
+                    const filtered = App.logic.getFilteredPlayers();
+                    
+                    grid.innerHTML = filtered.map(p => {
+                        const img = p.photo || `https://ui-avatars.com/api/?name=${p.name}&background=random`;
+                        const borderColor = p.category === 'Legend' ? 'border-yellow-400' : (p.category === 'Pro' ? 'border-cyber-purple' : 'border-slate-700');
+                        
+                        const gameIcons = p.games.map(g => {
+                            if(g === 'Basketball') return '<i class="fa-solid fa-basketball text-orange-500"></i>';
+                            if(g === 'Mobile Legends') return '<i class="fa-solid fa-mobile text-blue-500"></i>';
+                            return '<i class="fa-solid fa-circle-dot text-green-500"></i>';
+                        }).join(' ');
+
+                        return `
+                        <div class="group relative bg-cyber-panel border-2 ${borderColor} rounded-xl overflow-hidden shadow-lg transition transform hover:-translate-y-2 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)]">
+                            <div class="h-48 w-full bg-slate-800 relative">
+                                <img src="${img}" class="w-full h-full object-cover">
+                                <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black to-transparent h-20"></div>
+                                <div class="absolute bottom-2 left-3">
+                                    <h3 class="text-white font-display text-2xl tracking-wide">${p.name}</h3>
+                                    <p class="text-[10px] text-cyber-cyan uppercase font-bold">${p.group_name || 'Free Agent'}</p>
+                                </div>
+                                <div class="absolute top-2 right-2 bg-black/70 backdrop-blur px-2 py-0.5 rounded text-[10px] uppercase font-bold text-white border border-white/20">
+                                    ${p.category}
+                                </div>
+                            </div>
+                            <div class="p-4 bg-cyber-dark/90 relative">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs text-slate-500 font-bold">AGE: <span class="text-white">${p.age}</span></span>
+                                    <div class="flex gap-2 text-sm">${gameIcons}</div>
+                                </div>
+                                <div class="w-full h-1 bg-slate-800 rounded overflow-hidden">
+                                    <div class="bg-cyber-cyan h-full" style="width: ${Math.floor(Math.random() * 40 + 60)}%"></div>
+                                </div>
+                                <div class="text-[9px] text-right mt-1 text-cyber-cyan">Win Rate</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                },
+
+                renderAdminTable: () => {
+                    const tbody = document.getElementById('admin-table-body');
+                    document.getElementById('stat-total-players').innerText = App.state.players.length;
+                    
+                    tbody.innerHTML = App.state.players.map(p => `
+                        <tr class="hover:bg-white/5 transition group">
+                            <td class="px-6 py-4 flex items-center gap-3">
+                                <img src="${p.photo}" class="w-8 h-8 rounded-full border border-slate-600 object-cover">
+                                <span class="font-bold text-white">${p.name}</span>
+                            </td>
+                            <td class="px-6 py-4">${p.group_name}</td>
+                            <td class="px-6 py-4"><span class="bg-slate-800 px-2 py-1 rounded text-xs border border-slate-700">${p.category}</span></td>
+                            <td class="px-6 py-4 text-xs text-slate-400">${p.games.join(', ')}</td>
+                            <td class="px-6 py-4 text-right">
+                                <button onclick="App.logic.editPlayer(${p.id})" class="text-cyber-cyan hover:text-white mr-3"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="App.logic.deletePlayer(${p.id})" class="text-red-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+                },
+
+                getFilteredPlayers: () => {
+                    const term = document.getElementById('roster-search').value.toLowerCase();
+                    return App.state.players.filter(p => p.name.toLowerCase().includes(term) || (p.group_name && p.group_name.toLowerCase().includes(term)));
+                },
+
+                populatePublicGroups: () => {
+                    const groups = [...new Set(App.state.players.map(p => p.group_name).filter(Boolean))].sort();
+                    let html = '<option value="">-- Select Team --</option>';
+                    groups.forEach(g => html += `<option value="${g}">${g}</option>`);
+                    html += '<option value="NEW" class="font-bold text-cyber-cyan">+ Create New Team</option>';
+                    document.getElementById('pub-group').innerHTML = html;
+                },
+
+                handleGroupSelect: (el) => {
+                    const custom = document.getElementById('pub-group-custom');
+                    if(el.value === 'NEW') { custom.classList.remove('hidden'); custom.focus(); }
+                    else custom.classList.add('hidden');
+                },
+
+                // CRUD OPERATIONS
+                submitPlayerForm: async () => {
+                    const mode = document.getElementById('crud-mode').value;
+                    const id = document.getElementById('crud-id').value;
+                    const name = document.getElementById('pub-name').value;
+                    const age = document.getElementById('pub-age').value;
+                    const cat = document.getElementById('pub-cat').value;
+                    let group = document.getElementById('pub-group').value;
+                    if(group === 'NEW') group = document.getElementById('pub-group-custom').value;
+                    const games = Array.from(document.querySelectorAll('.pub-game:checked')).map(c => c.value);
+
+                    if(!name || !age || !group) return App.ui.toast('Please fill required fields', 'warning');
+
+                    const playerData = {
+                        name, age, category: cat, group_name: group, games, 
+                        photo: App.state.tempPhoto || document.getElementById('pub-preview').src
+                    };
+
+                    let newId;
+
+                    if(mode === 'create') {
+                        newId = Date.now();
+                        playerData.id = newId;
+                        App.state.players.unshift(playerData);
+                        
+                        // Fire confetti
+                        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                        App.ui.toast('Player Registered & Logged In');
+
+                        // Update Login Select
+                        const select = document.getElementById('login-select');
+                        const opt = document.createElement('option');
+                        opt.value = newId;
+                        opt.text = name;
+                        select.prepend(opt);
+
+                        // Auto login
+                        App.state.currentUser = playerData;
+                        App.auth.setRole('player');
+                        localStorage.setItem('kw_uid', newId);
+
+                    } else {
+                        const index = App.state.players.findIndex(p => p.id == id);
+                        if(index !== -1) {
+                            App.state.players[index] = { ...App.state.players[index], ...playerData };
+                            App.ui.toast('Player Updated');
+                            if(App.state.currentUser && App.state.currentUser.id == id) {
+                                App.state.currentUser = App.state.players[index];
+                                App.ui.updateSidebarProfile();
+                            }
+                        }
+                    }
+
+                    App.ui.toggleModal('public-reg-modal', false);
+                    App.state.tempPhoto = null;
+                    if(App.state.currentView === 'admin') App.logic.renderAdminTable();
+                    if(App.state.currentView === 'roster') App.logic.renderRoster();
+                    App.logic.populatePublicGroups();
+                },
+
+                deletePlayer: (id) => {
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ff003c',
+                        background: '#0f172a',
+                        color: '#fff'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            App.state.players = App.state.players.filter(p => p.id !== id);
+                            App.logic.renderAdminTable();
+                            App.ui.toast('Player Deleted', 'success');
+                        }
+                    })
+                },
+
+                editPlayer: (id) => {
+                    const p = App.state.players.find(p => p.id === id);
+                    if(!p) return;
+
+                    document.getElementById('modal-title').innerText = "EDIT PLAYER";
+                    document.getElementById('crud-mode').value = 'edit';
+                    document.getElementById('crud-id').value = id;
+                    document.getElementById('pub-name').value = p.name;
+                    document.getElementById('pub-age').value = p.age;
+                    document.getElementById('pub-cat').value = p.category;
+                    
+                    const groupSel = document.getElementById('pub-group');
+                    let groupExists = false;
+                    for(let i=0; i<groupSel.options.length; i++){
+                        if(groupSel.options[i].value === p.group_name) groupExists = true;
+                    }
+                    if(groupExists) {
+                        groupSel.value = p.group_name;
+                        document.getElementById('pub-group-custom').classList.add('hidden');
+                    } else {
+                        groupSel.value = 'NEW';
+                        document.getElementById('pub-group-custom').value = p.group_name;
+                        document.getElementById('pub-group-custom').classList.remove('hidden');
+                    }
+
+                    document.getElementById('pub-preview').src = p.photo;
+                    document.querySelectorAll('.pub-game').forEach(c => c.checked = false);
+                    if(p.games) p.games.forEach(g => {
+                        const cb = document.querySelector(`.pub-game[value="${g}"]`);
+                        if(cb) cb.checked = true;
+                    });
+
+                    App.ui.toggleModal('public-reg-modal', true);
+                },
+
+                // Chat System
+                simulateChat: () => {
+                    const messages = [
+                        "Let's go Team Alpha!", "Nice play!", "What is that build?", "GGWP", 
+                        "Who is winning?", "Stream lag?", "This MVP is crazy", "LOL", "Next match when?"
+                    ];
+                    const users = ["User123", "Guest99", "FanBoy"];
+                    
+                    setInterval(() => {
+                        if(Math.random() > 0.7 && App.state.currentView === 'live') {
+                            const msg = messages[Math.floor(Math.random() * messages.length)];
+                            const user = users[Math.floor(Math.random() * users.length)];
+                            App.logic.addChatMessage(user, msg, 'guest');
+                        }
+                    }, 4000);
+                },
+
+                addChatMessage: (user, msg, type) => {
+                    const container = document.getElementById('chat-container');
+                    let nameColor = 'text-slate-500'; // Default guest
+                    let badge = '';
+
+                    if(type === 'admin') {
+                        nameColor = 'text-cyber-pink text-glow-pink';
+                        badge = '<i class="fa-solid fa-shield-halved text-[10px] mr-1"></i>';
+                    } else if(type === 'player') {
+                        nameColor = 'text-cyber-cyan text-glow';
+                    }
+
+                    const div = document.createElement('div');
+                    div.className = "animate-fade-in";
+                    div.innerHTML = `
+                        <div class="mb-1">
+                            <span class="font-bold ${nameColor} uppercase">${badge}${user}</span>
+                            <span class="text-slate-600 text-[10px] ml-1">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                        <div class="text-slate-300 break-words leading-tight bg-white/5 p-2 rounded-tr-lg rounded-br-lg rounded-bl-lg border-l-2 border-slate-700">
+                            ${msg}
+                        </div>
+                    `;
+                    container.appendChild(div);
+                    container.scrollTop = container.scrollHeight;
+                },
+
+                sendChat: () => {
+                    const input = document.getElementById('chat-input');
+                    const msg = input.value.trim();
+                    if(!msg) return;
+
+                    let name = 'Guest';
+                    let type = 'guest';
+
+                    if(App.state.role === 'admin') {
+                        name = 'ADMIN';
+                        type = 'admin';
+                    } else if(App.state.role === 'player' && App.state.currentUser) {
+                        name = App.state.currentUser.name;
+                        type = 'player';
+                    }
+
+                    App.logic.addChatMessage(name, msg, type);
+                    input.value = '';
+                }
+            }
+        };
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', App.auth.init);
+
+    </script>
+</body>
+</html>
