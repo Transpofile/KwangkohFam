@@ -2,1105 +2,971 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KWANGKOH COMPOUND | 9th Anniversary</title>
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KWANGKOH | 9th Anniversary</title>
+    
+    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@300;500;700&family=Roboto:wght@400;500;700&family=Great+Vibes&display=swap');
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&family=Teko:wght@400;600;700&display=swap" rel="stylesheet">
 
-        :root { 
-            --theme-orange: #ff5a00; 
-            --theme-gold: #fbbf24;
-            --theme-dark: #0f172a; 
+    <!-- Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            base: '#050b14',
+                            dark: '#02040a',
+                            panel: '#0f172a',
+                            cyan: '#00f0ff',
+                            purple: '#7000df',
+                            pink: '#ff003c',
+                            yellow: '#fcee0a'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Rajdhani', 'sans-serif'],
+                        display: ['Teko', 'sans-serif'],
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #1e293b 1px, transparent 1px), linear-gradient(to bottom, #1e293b 1px, transparent 1px)",
+                        'cyber-grad': "linear-gradient(135deg, #0f172a 0%, #02040a 100%)"
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { boxShadow: '0 0 5px #00f0ff' },
+                            '100%': { boxShadow: '0 0 20px #00f0ff, 0 0 10px #7000df' }
+                        }
+                    }
+                }
+            }
         }
-        body { font-family: 'Roboto', sans-serif; background-color: #020617; }
-        h1, h2, h3, .scoreboard-font { font-family: 'Teko', sans-serif; }
-        .fancy-font { font-family: 'Great Vibes', cursive; }
+    </script>
+
+    <style>
+        /* Base & Reset */
+        body { background-color: #050b14; overflow: hidden; touch-action: manipulation; }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: var(--theme-dark); }
-        ::-webkit-scrollbar-thumb { background: var(--theme-orange); border-radius: 4px; }
+        /* Cyber Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #02040a; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #00f0ff; }
 
-        .nav-active { border-left: 4px solid var(--theme-orange); background: linear-gradient(90deg, rgba(255,90,0,0.1) 0%, rgba(0,0,0,0) 100%); color: white; }
-        .nav-item { transition: all 0.3s ease; cursor: pointer; }
-        .nav-item:hover { color: var(--theme-orange); transform: translateX(5px); }
-
-        /* Glassmorphism */
+        /* Glass Panel 2.0 */
         .glass-panel {
-            background: rgba(30, 41, 59, 0.75);
+            background: rgba(15, 23, 42, 0.7);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
 
-        .chart-container { position: relative; height: 300px; width: 100%; }
-        video { transform: scaleX(-1); } /* Mirror camera */
-
-        /* Admin Logic CSS */
-        .admin-badge { display: none; }
-        .admin-only-section { display: none !important; }
-        .guest-only-section { display: block; }
-        
-        /* When Body has 'is-admin', show these */
-        body.is-admin .admin-badge { display: inline-block; }
-        body.is-admin .admin-only-section { display: block !important; }
-        body.is-admin .guest-only-section { display: none !important; }
-
-        /* Ticker Animation */
-        .ticker-wrap { width: 100%; overflow: hidden; white-space: nowrap; box-sizing: border-box; }
-        .ticker { display: inline-block; padding-left: 100%; animation: ticker 40s linear infinite; }
-        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
-
-        /* Checkbox Custom Style for Player Cards */
-        .player-checkbox:checked + div {
-            background: linear-gradient(135deg, #f97316 0%, #c2410c 100%);
-            border-color: #fbbf24;
-            color: white;
-            transform: scale(0.98);
+        .cyber-border {
+            position: relative;
         }
-        .player-checkbox:checked + div .sub-text { color: #fed7aa; }
-        .player-checkbox:checked + div img { border-color: #fff; }
+        .cyber-border::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, #00f0ff, transparent);
+        }
+        .cyber-border::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, #7000df, transparent);
+        }
 
-        /* Loading Spinner */
-        .loader { border: 2px solid #f3f3f3; border-radius: 50%; border-top: 2px solid #ff5a00; width: 14px; height: 14px; animation: spin 1s linear infinite; display: inline-block; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Bracket Tree Lines */
+        .bracket-line { border-right: 2px solid #334155; border-top: 2px solid #334155; border-radius: 0 10px 0 0; }
+        .bracket-connector { border-bottom: 2px solid #334155; }
+
+        /* Animations */
+        .page-transition { animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); scale: 0.98; } to { opacity: 1; transform: translateY(0); scale: 1; } }
+
+        /* Ticker */
+        .ticker-wrap { overflow: hidden; white-space: nowrap; }
+        .ticker { display: inline-block; animation: ticker 30s linear infinite; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
+        /* Utilities */
+        .text-glow { text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .btn-cyber {
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            transition: all 0.2s;
+        }
+        .btn-cyber:active { transform: scale(0.95); }
     </style>
 </head>
-<body class="text-gray-100 font-sans h-screen flex flex-col overflow-hidden bg-[url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center bg-no-repeat bg-blend-multiply bg-slate-900">
+<body class="text-slate-300 font-sans h-[100dvh] flex flex-col bg-cyber-base selection:bg-cyber-cyan selection:text-black">
+
+    <!-- BACKGROUND GRID -->
+    <div class="fixed inset-0 z-0 opacity-20 pointer-events-none bg-[size:40px_40px] bg-grid-pattern"></div>
+    <div class="fixed inset-0 z-0 bg-radial-gradient from-transparent to-cyber-base"></div>
+
+    <!-- ================= MODALS ================= -->
 
     <!-- LOGIN MODAL -->
-    <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md hidden">
-        <div class="glass-panel p-8 rounded-2xl w-96 text-center border-t-4 border-orange-500 shadow-[0_0_50px_rgba(255,90,0,0.2)]">
-            <div class="mb-6">
-                <!----<i class="fa-solid fa-shield-halved text-5xl text-orange-500 mb-2"></i>-->
-		<center><img src="img/Logo.png"height="auto"width="30%"/></center></br>
-                <h2 class="text-3xl font-bold uppercase tracking-wider">KWANGKOH FAMILY</h2>
-                <p class="text-gray-400 text-xs tracking-widest uppercase">9th Yrs Anniversary Celebration</p>
-            </div>
+    <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+        <div class="glass-panel p-8 rounded-none btn-cyber w-full max-w-sm text-center relative overflow-hidden group">
+            <div class="absolute inset-0 bg-gradient-to-b from-cyber-cyan/10 to-transparent pointer-events-none"></div>
             
-            <button onclick="guestLogin()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded mb-3 transition border border-slate-600 flex items-center justify-center gap-2 group">
-                <i class="fa-solid fa-eye group-hover:text-orange-400 transition"></i> VIEW AS GUEST
-            </button>
+            <h2 class="text-6xl font-display font-bold text-white mb-0 italic tracking-tighter text-glow">KWANGKOH</h2>
+            <p class="text-xs tracking-[0.5em] text-cyber-cyan uppercase mb-8 font-bold border-b border-cyber-cyan/30 pb-4">9th Anniversary Edition</p>
 
-            <!-- NEW PLAYER BUTTON -->
-            <button onclick="openPublicRegModal()" class="w-full bg-gradient-to-r from-green-700 to-green-600 hover:from-green-600 hover:to-green-500 text-white font-bold py-3 rounded mb-6 transition shadow-lg transform hover:scale-105 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-user-plus"></i> JOIN / NEW PLAYER
-            </button>
-            
-            <div class="relative mb-4">
-                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-600"></div></div>
-                <div class="relative flex justify-center text-xs uppercase"><span class="bg-slate-800 px-2 text-gray-500">Or Admin Login</span></div>
-            </div>
-
-            <div class="flex gap-2">
-                <input type="password" id="admin-pass" placeholder="Enter Password" class="flex-1 bg-slate-900 border border-slate-600 rounded px-4 py-2 text-white outline-none focus:border-orange-500 transition">
-                <button onclick="adminLogin()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded font-bold transition">
-                    <i class="fa-solid fa-arrow-right"></i>
+            <div class="space-y-4 relative z-10">
+                <button onclick="App.auth.guest()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-4 font-bold border-l-4 border-slate-500 hover:border-white transition flex items-center justify-center gap-3 group">
+                    <span>VIEW AS GUEST</span>
+                    <i class="fa-solid fa-arrow-right opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </button>
+                
+                <button onclick="App.ui.toggleModal('public-reg-modal', true)" class="w-full bg-cyber-purple hover:bg-purple-600 text-white font-bold py-4 border-l-4 border-cyber-pink shadow-[0_0_20px_rgba(112,0,223,0.3)] transition transform hover:translate-x-1 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-user-plus"></i> JOIN TOURNAMENT
                 </button>
             </div>
-            <p id="login-error" class="text-red-500 text-xs mt-2 hidden"><i class="fa-solid fa-circle-exclamation mr-1"></i> Access Denied</p>
+
+            <div class="mt-8 pt-6 border-t border-white/5">
+                <div class="flex gap-2 bg-black/50 p-1 border border-slate-800">
+                    <input type="password" id="admin-pass" placeholder="ADMIN PASSCODE" class="flex-1 bg-transparent border-none px-3 py-2 text-sm text-white focus:outline-none placeholder-slate-600 font-mono">
+                    <button onclick="App.auth.admin()" class="bg-cyber-cyan text-black px-4 font-bold hover:bg-white transition"><i class="fa-solid fa-bolt"></i></button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- PUBLIC REGISTRATION MODAL (IMPROVED) -->
-    <div id="public-reg-modal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-lg hidden">
-        <div class="glass-panel p-6 rounded-2xl w-full max-w-lg relative border border-green-500/30 max-h-[95vh] overflow-y-auto custom-scrollbar shadow-2xl">
-            <button onclick="closePublicRegModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition"><i class="fa-solid fa-times text-xl"></i></button>
-            
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 uppercase">New Player Sign Up</h2>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest">Join the Kwangkoh Compound League</p>
+    <!-- PLAYER CRUD MODAL (Register/Edit) -->
+    <div id="public-reg-modal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-xl hidden">
+        <div class="glass-panel w-full max-w-2xl h-auto max-h-[90vh] flex flex-col relative shadow-2xl border-t border-cyber-cyan/50">
+            <!-- Header -->
+            <div class="p-4 border-b border-white/10 flex justify-between items-center bg-cyber-panel">
+                <h3 id="modal-title" class="font-display text-3xl text-cyber-cyan uppercase italic">New Player Registration</h3>
+                <button onclick="App.ui.toggleModal('public-reg-modal', false)" class="text-slate-400 hover:text-white hover:rotate-90 transition duration-300"><i class="fa-solid fa-times text-2xl"></i></button>
             </div>
 
-            <div class="space-y-4">
-                <!-- 1. Photo Upload (Bubble) -->
-                <div class="flex justify-center mb-2">
-                    <div class="relative group">
-                        <div class="w-24 h-24 rounded-full border-4 border-slate-700 overflow-hidden bg-slate-800 relative shadow-[0_0_15px_rgba(0,255,0,0.2)]">
-                            <img id="pub-photo-preview" src="https://via.placeholder.com/150?text=PHOTO" class="w-full h-full object-cover">
-                            <video id="pub-camera-video" class="absolute inset-0 w-full h-full object-cover hidden" autoplay playsinline></video>
-                            <canvas id="pub-camera-canvas" class="hidden"></canvas>
+            <div class="flex flex-col md:flex-row h-full overflow-hidden">
+                <!-- Camera/Preview Side -->
+                <div class="w-full md:w-1/3 bg-black/50 p-6 flex flex-col items-center justify-center border-r border-white/5 gap-4">
+                    <div class="relative w-40 h-48 bg-slate-900 border-2 border-dashed border-slate-700 flex items-center justify-center overflow-hidden group">
+                        <img id="pub-preview" src="https://via.placeholder.com/150?text=NO+PHOTO" class="w-full h-full object-cover">
+                        <video id="pub-video" class="absolute inset-0 w-full h-full object-cover hidden" autoplay playsinline muted></video>
+                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center flex-col gap-2">
+                            <span class="text-xs font-bold text-white uppercase">Change Photo</span>
                         </div>
-                        <div class="flex justify-center gap-2 mt-3">
-                            <button onclick="document.getElementById('pub-file-upload').click()" class="bg-slate-700 text-[10px] py-1 px-3 rounded text-white hover:bg-slate-600 transition border border-slate-600"><i class="fa-solid fa-upload mr-1"></i> Upload</button>
-                            <button onclick="togglePubCamera()" class="bg-blue-600 text-[10px] py-1 px-3 rounded text-white hover:bg-blue-500 transition shadow-lg"><i class="fa-solid fa-camera mr-1"></i> Camera</button>
-                            <button id="pub-btn-snap" onclick="capturePubPhoto()" class="hidden bg-red-600 text-[10px] py-1 px-3 rounded text-white animate-pulse font-bold">SNAP</button>
-                        </div>
-                        <input type="file" id="pub-file-upload" accept="image/*" class="hidden" onchange="handlePubFileUpload(this)">
                     </div>
+                    <div class="grid grid-cols-2 gap-2 w-full">
+                        <button onclick="document.getElementById('pub-upload').click()" class="bg-slate-800 text-xs py-2 hover:text-cyber-cyan"><i class="fa-solid fa-upload"></i> UPLOAD</button>
+                        <button onclick="App.camera.toggle('pub')" class="bg-slate-800 text-xs py-2 hover:text-cyber-pink"><i class="fa-solid fa-camera"></i> CAM</button>
+                        <input type="file" id="pub-upload" class="hidden" accept="image/*" onchange="App.camera.handleUpload(this, 'pub-preview')">
+                    </div>
+                    <button id="pub-snap" onclick="App.camera.snap('pub')" class="hidden w-full bg-red-600 text-white font-bold py-2 animate-pulse">TAKE PHOTO</button>
+                    <input type="hidden" id="crud-mode" value="create"> <!-- create or edit -->
+                    <input type="hidden" id="crud-id" value="">
                 </div>
 
-                <!-- 2. Personal Info -->
-                <div class="grid grid-cols-12 gap-3">
-                    <div class="col-span-12">
-                        <label class="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Full Name / Alias <span class="text-red-500">*</span></label>
-                        <input type="text" id="pub-reg-name" class="w-full bg-slate-800 border border-slate-600 rounded p-3 text-white focus:border-green-500 outline-none transition" placeholder="e.g. Michael 'Air' Jordan">
+                <!-- Form Side -->
+                <div class="flex-1 p-6 overflow-y-auto custom-scroll space-y-5 bg-cyber-grad">
+                    <div>
+                        <label class="text-xs text-cyber-cyan font-bold uppercase mb-1 block tracking-wider">Alias / IGN</label>
+                        <input type="text" id="pub-name" class="w-full bg-slate-900/80 border border-slate-700 p-3 text-white focus:border-cyber-cyan outline-none font-bold text-lg rounded-none skew-x-[-10deg]">
                     </div>
-                    <div class="col-span-5">
-                        <label class="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Age <span class="text-red-500">*</span></label>
-                        <input type="number" id="pub-reg-age" class="w-full bg-slate-800 border border-slate-600 rounded p-3 text-white focus:border-green-500 outline-none transition" placeholder="25">
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-slate-500 font-bold uppercase mb-1 block">Age</label>
+                            <input type="number" id="pub-age" class="w-full bg-slate-900/80 border border-slate-700 p-3 text-white focus:border-cyber-cyan outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 font-bold uppercase mb-1 block">Tier</label>
+                            <select id="pub-cat" class="w-full bg-slate-900/80 border border-slate-700 p-3 text-white focus:border-cyber-cyan outline-none">
+                                <option value="Rookie">Rookie</option>
+                                <option value="Amateur">Amateur</option>
+                                <option value="Pro">Pro</option>
+                                <option value="Legend">Legend</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="col-span-7">
-                        <label class="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Category <span class="text-red-500">*</span></label>
-                        <select id="pub-reg-category" class="w-full bg-slate-800 border border-slate-600 rounded p-3 text-white focus:border-green-500 outline-none transition">
-                            <option value="Rookie">Rookie (Beginner)</option>
-                            <option value="Amateur">Amateur (Intermediate)</option>
-                            <option value="Pro">Pro (Advanced)</option>
-                            <option value="Legend">Legend (Elite)</option>
-                            <option value="Guest">Guest / Visitor</option>
+
+                    <div>
+                        <label class="text-xs text-slate-500 font-bold uppercase mb-1 block">Team Affiliation</label>
+                        <select id="pub-group" onchange="App.logic.handleGroupSelect(this)" class="w-full bg-slate-900/80 border border-slate-700 p-3 text-white focus:border-cyber-cyan outline-none mb-2">
+                            <!-- JS Populated -->
                         </select>
+                        <input type="text" id="pub-group-custom" class="hidden w-full bg-cyber-purple/20 border border-cyber-purple p-3 text-white placeholder-cyber-purple" placeholder="New Team Name...">
                     </div>
-                </div>
 
-                <!-- 3. Robust Group Selection -->
-                <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-                    <label class="text-[10px] uppercase font-bold text-gray-500 tracking-wider block mb-1">Team / Group <span class="text-red-500">*</span></label>
-                    <div class="flex flex-col gap-2">
-                        <select id="pub-reg-group" onchange="handleGroupChange(this)" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white focus:border-green-500 outline-none">
-                            <!-- Populated via JS -->
-                        </select>
-                        
-                        <div id="group-stats-info" class="text-[10px] text-gray-400 italic hidden ml-1">
-                            <i class="fa-solid fa-users mr-1"></i> Current members: <span id="group-member-count" class="text-white font-bold">0</span>
+                    <div>
+                        <label class="text-xs text-slate-500 font-bold uppercase mb-2 block">Active Games</label>
+                        <div class="flex flex-wrap gap-2">
+                            <label class="cursor-pointer">
+                                <input type="checkbox" class="peer sr-only pub-game" value="Basketball">
+                                <div class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 peer-checked:bg-orange-600 peer-checked:text-white peer-checked:border-orange-400 transition font-bold text-xs uppercase flex items-center gap-2">
+                                    <i class="fa-solid fa-basketball"></i> Hoops
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="checkbox" class="peer sr-only pub-game" value="Mobile Legends">
+                                <div class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-400 transition font-bold text-xs uppercase flex items-center gap-2">
+                                    <i class="fa-solid fa-mobile"></i> MLBB
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="checkbox" class="peer sr-only pub-game" value="Billiards">
+                                <div class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 peer-checked:bg-green-600 peer-checked:text-white peer-checked:border-green-400 transition font-bold text-xs uppercase flex items-center gap-2">
+                                    <i class="fa-solid fa-circle-dot"></i> Pool
+                                </div>
+                            </label>
                         </div>
-
-                        <!-- Custom Input -->
-                        <div id="custom-group-container" class="hidden">
-                            <div class="relative">
-                                <input type="text" id="pub-reg-group-custom" class="w-full bg-slate-800 border-2 border-green-600/50 rounded p-3 text-white outline-none focus:border-green-500 pl-10" placeholder="Enter New Team Name...">
-                                <i class="fa-solid fa-plus-circle absolute left-3 top-4 text-green-500"></i>
-                            </div>
-                            <p class="text-[10px] text-green-400 mt-1 ml-1"><i class="fa-solid fa-circle-info"></i> This will create a new team automatically.</p>
-                        </div>
                     </div>
                 </div>
-
-                <!-- 4. Games -->
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-500 block mb-2 tracking-wider">Interested Games <span class="text-red-500">*</span></label>
-                    <div class="flex flex-col gap-2">
-                        <label class="flex items-center gap-3 cursor-pointer border border-slate-600 rounded p-3 hover:bg-slate-700 has-[:checked]:bg-green-900/50 has-[:checked]:border-green-500 transition">
-                            <input type="checkbox" class="pub-game-check hidden" value="Basketball Game Play">
-                            <div class="bg-orange-600 text-white w-8 h-8 flex items-center justify-center rounded-full"><i class="fa-solid fa-basketball"></i></div>
-                            <span class="text-sm font-bold uppercase">Basketball Game Play</span>
-                        </label>
-                        
-                        <label class="flex items-center gap-3 cursor-pointer border border-slate-600 rounded p-3 hover:bg-slate-700 has-[:checked]:bg-blue-900/50 has-[:checked]:border-blue-500 transition">
-                            <input type="checkbox" class="pub-game-check hidden" value="Mobile Legend Bang Bang Game Play">
-                            <div class="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-full"><i class="fa-solid fa-mobile"></i></div>
-                            <span class="text-sm font-bold uppercase">Mobile Legend Bang Bang Game Play</span>
-                        </label>
-
-                        <label class="flex items-center gap-3 cursor-pointer border border-slate-600 rounded p-3 hover:bg-slate-700 has-[:checked]:bg-purple-900/50 has-[:checked]:border-purple-500 transition">
-                            <input type="checkbox" class="pub-game-check hidden" value="Pool Game Game Play">
-                            <div class="bg-purple-600 text-white w-8 h-8 flex items-center justify-center rounded-full"><i class="fa-solid fa-circle-dot"></i></div>
-                            <span class="text-sm font-bold uppercase">Pool Game Game Play</span>
-                        </label>
-                    </div>
-                </div>
-
-                <button id="btn-pub-submit" onclick="publicRegisterSubmit()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded uppercase mt-2 shadow-[0_0_20px_rgba(34,197,94,0.3)] transition transform hover:scale-[1.02]">
-                    Submit Registration
+            </div>
+            
+            <div class="p-4 border-t border-white/10 bg-black/40 flex justify-end gap-3">
+                 <button onclick="App.ui.toggleModal('public-reg-modal', false)" class="px-6 py-3 font-bold text-slate-400 hover:text-white uppercase">Cancel</button>
+                <button onclick="App.logic.submitPlayerForm()" class="btn-cyber bg-cyber-cyan text-black font-display text-xl uppercase px-8 py-3 hover:bg-white hover:scale-105 transition shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                    Save Player
                 </button>
             </div>
         </div>
     </div>
+
+    <!-- ================= LAYOUT ================= -->
 
     <!-- Header -->
-    <header class="bg-slate-900/90 border-b border-orange-500/50 shadow-2xl z-30 h-20 flex-shrink-0 backdrop-blur-md">
-        <div class="container mx-auto flex items-center justify-between h-full px-6">
-            <div class="flex items-center gap-4">
-                <div class="bg-gradient-to-br from-orange-600 to-red-600 h-14 w-14 flex items-center justify-center text-white text-3xl shadow-[0_0_15px_rgba(255,90,0,0.5)] rounded-lg transform -skew-x-6">
-                    <i class="fa-solid fa-crown"></i>
+    <header class="h-16 z-40 bg-cyber-dark/90 backdrop-blur border-b border-white/5 flex items-center justify-between px-4 md:px-6 flex-shrink-0 relative">
+        <!-- Glow Line -->
+        <div class="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyber-cyan to-transparent opacity-50"></div>
+
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-cyber-pink rounded-sm rotate-3 flex items-center justify-center text-white shadow-[0_0_15px_#ff003c]">
+                <i class="fa-solid fa-crown text-lg -rotate-3"></i>
+            </div>
+            <div class="leading-none">
+                <h1 class="font-display text-3xl tracking-wide text-white italic">KWANGKOH</h1>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-cyber-cyan uppercase tracking-[0.3em] font-bold">Compound 9th Anniv</span>
                 </div>
-                <div class="text-slate-100 flex flex-col justify-center">
-                    <h1 class="text-4xl font-bold tracking-wide leading-none uppercase drop-shadow-lg">
-                        KWANGKOH <span class="text-orange-500">COMPOUND</span>
-                    </h1>
-                    <div class="text-sm text-gray-400 tracking-wider flex items-center gap-2">
-                        <span class="font-bold uppercase text-orange-400">9th Anniversary</span>
-                        <span class="w-1 h-1 bg-gray-500 rounded-full"></span>
-                        <span class="fancy-font text-xl text-yellow-400 font-normal">Feb 21, 2026</span>
-                        <span class="admin-badge bg-red-600 text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase ml-2 animate-pulse shadow-md">ADMIN</span>
-                    </div>
-                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div id="admin-badge" class="hidden animate-pulse px-3 py-1 bg-red-900/50 border border-red-500 text-red-400 text-[10px] font-bold uppercase tracking-widest rounded">
+                <i class="fa-solid fa-shield-halved mr-1"></i> Admin Mode
             </div>
             
-            <div class="flex items-center gap-4">
-                <div id="db-status" class="hidden md:flex text-[10px] uppercase font-bold border border-slate-700 bg-slate-800 text-gray-400 px-3 py-1 rounded-full items-center gap-2 shadow-inner">
-                    <span class="w-2 h-2 rounded-full bg-gray-500 animate-pulse"></span> Connecting...
-                </div>
-                <!-- LOGOUT BUTTON -->
-                <button onclick="systemLogout()" class="bg-slate-800 hover:bg-red-900/80 border border-slate-700 hover:border-red-500 text-gray-400 hover:text-white rounded-full w-10 h-10 flex items-center justify-center transition shadow-lg group" title="Logout">
-                    <i class="fa-solid fa-power-off group-hover:scale-110 transition-transform"></i>
-                </button>
-            </div>
+            <button onclick="App.auth.logout()" class="text-slate-500 hover:text-white transition">
+                <i class="fa-solid fa-power-off"></i>
+            </button>
         </div>
     </header>
 
-    <!-- Main Layout -->
-    <main class="flex-1 flex h-full overflow-hidden">
+    <!-- Main Container -->
+    <div class="flex flex-1 overflow-hidden relative z-10">
         
-        <!-- Sidebar Navigation -->
-        <nav class="w-20 bg-slate-900/95 flex flex-col items-center py-6 border-r border-slate-700/50 z-20 backdrop-blur">
-            <div onclick="showSection('broadcast')" id="nav-broadcast" class="nav-item nav-active w-full py-5 flex flex-col items-center gap-1 text-gray-400 relative group">
-                <i class="fa-solid fa-tower-broadcast text-2xl mb-1"></i>
-                <span class="text-[10px] font-bold uppercase tracking-widest">Live</span>
-                <div class="absolute right-0 top-0 bottom-0 w-1 bg-orange-500 scale-y-0 group-hover:scale-y-100 transition-transform origin-center"></div>
+        <!-- Desktop Sidebar -->
+        <aside class="hidden md:flex flex-col w-20 lg:w-64 bg-cyber-dark border-r border-white/5 backdrop-blur-md transition-all z-20">
+            <nav class="flex-1 py-6 space-y-1 px-2">
+                <!-- Nav Item Helper -->
+                <script>
+                    const navItem = (id, icon, label, active = false) => `
+                        <button onclick="App.nav.go('${id}')" id="nav-d-${id}" class="w-full relative overflow-hidden flex items-center gap-4 px-4 py-4 rounded transition-all group hover:bg-white/5 ${active ? 'bg-white/5' : 'text-slate-500'}">
+                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-cyber-cyan transition-all duration-300 ${active ? 'opacity-100 h-full' : 'opacity-0 h-0 group-hover:h-full group-hover:opacity-50'}"></div>
+                            <i class="fa-solid ${icon} text-xl w-6 text-center ${active ? 'text-cyber-cyan text-glow' : 'group-hover:text-white'}"></i>
+                            <span class="hidden lg:block font-display text-xl uppercase tracking-wide pt-1 ${active ? 'text-white' : 'group-hover:text-white'}">${label}</span>
+                        </button>`;
+                    document.write(navItem('live', 'fa-gamepad', 'Live Arena', true));
+                    document.write(navItem('matches', 'fa-trophy', 'Tournaments'));
+                    document.write(navItem('roster', 'fa-users-viewfinder', 'Roster'));
+                    document.write(navItem('admin', 'fa-database', 'Admin Panel')); // Only shows if admin
+                </script>
+            </nav>
+            <!-- User Status -->
+            <div class="p-4 border-t border-white/5">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyber-cyan to-blue-600 p-[1px]">
+                        <img src="https://ui-avatars.com/api/?name=Guest&background=000&color=fff" class="rounded-full w-full h-full">
+                    </div>
+                    <div class="hidden lg:block">
+                        <div class="text-xs font-bold text-white">Guest User</div>
+                        <div class="text-[9px] text-emerald-500 font-bold uppercase"><i class="fa-solid fa-circle text-[6px] animate-pulse"></i> Online</div>
+                    </div>
+                </div>
             </div>
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <main class="flex-1 relative overflow-hidden flex flex-col bg-cyber-base">
             
-            <div onclick="showSection('players')" id="nav-players" class="nav-item w-full py-5 flex flex-col items-center gap-1 text-gray-400 relative group">
-                <i class="fa-solid fa-users text-2xl mb-1"></i>
-                <span class="text-[10px] font-bold uppercase tracking-widest">Roster</span>
-            </div>
-            <div onclick="showSection('matches')" id="nav-matches" class="nav-item w-full py-5 flex flex-col items-center gap-1 text-gray-400 relative group">
-                <i class="fa-solid fa-trophy text-2xl mb-1"></i>
-                <span class="text-[10px] font-bold uppercase tracking-widest">Matches</span>
-            </div>
-            
-            <div onclick="showSection('analytics')" id="nav-analytics" class="nav-item w-full py-5 flex flex-col items-center gap-1 text-gray-400 relative group">
-                <i class="fa-solid fa-chart-pie text-2xl mb-1"></i>
-                <span class="text-[10px] font-bold uppercase tracking-widest">Stats</span>
-            </div>
-        </nav>
-
-        <!-- Content Area -->
-        <div class="flex-1 relative overflow-hidden bg-black/50 backdrop-blur-sm flex flex-col">
-
-            <!-- SECTION 1: BROADCAST (Public) -->
-            <section id="section-broadcast" class="flex-1 relative flex flex-col lg:flex-row h-full">
-                <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden group">
-                    <video id="main-video" class="w-full h-full object-contain" loop muted autoplay>
-                        <source src="https://assets.mixkit.co/videos/preview/mixkit-basketball-player-dribbling-in-a-court-44944-large.mp4" type="video/mp4">
-                    </video>
-                    
-                    <!-- MVP CARD (Dynamic Placeholder) -->
-                    <div class="guest-only-section absolute bottom-20 right-10 animate-fade-in-up">
-                        <div class="glass-panel p-3 rounded-xl flex items-center gap-3 w-72 border-l-4 border-yellow-400 shadow-[0_0_25px_rgba(251,191,36,0.2)]">
-                            <img id="mvp-img" src="https://ui-avatars.com/api/?name=MVP&background=fbbf24&color=000" class="w-14 h-14 rounded-full border-2 border-white shadow-lg object-cover">
-                            <div>
-                                <div class="text-[10px] text-yellow-400 font-bold uppercase tracking-widest flex items-center gap-1"><i class="fa-solid fa-star"></i> Player of the Day</div>
-                                <div id="mvp-name" class="text-white font-bold leading-none text-lg">Seeking Talent...</div>
-                                <div id="mvp-quote" class="text-[10px] text-gray-400 italic mt-1">"Determination wins games."</div>
+            <!-- VIEW: LIVE ARENA (Twitch Style) -->
+            <section id="view-live" class="page-transition absolute inset-0 flex flex-col md:flex-row">
+                <!-- Video Column -->
+                <div class="flex-1 flex flex-col relative bg-black">
+                    <!-- Stream Player -->
+                    <div class="flex-1 relative group">
+                        <video id="main-stream" class="w-full h-full object-contain" loop muted autoplay playsinline poster="https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=2071&auto=format&fit=crop">
+                            <source src="https://assets.mixkit.co/videos/preview/mixkit-cyberpunk-gamer-playing-32986-large.mp4" type="video/mp4">
+                        </video>
+                        
+                        <!-- Overlay UI -->
+                        <div class="absolute top-4 left-4 flex gap-2">
+                            <div class="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+                                <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> LIVE
+                            </div>
+                            <div class="bg-black/60 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1">
+                                <i class="fa-solid fa-user"></i> <span id="live-viewer-count">1,204</span>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Enhanced Score Overlay -->
-                    <div id="broadcast-overlay" class="absolute top-6 left-6 z-30 flex shadow-[0_10px_30px_rgba(0,0,0,0.7)] rounded-lg overflow-hidden border border-white/10 scale-75 lg:scale-100 origin-top-left transition hover:scale-[1.02]">
-                        <div class="bg-slate-100/95 backdrop-blur text-slate-900 w-32 h-24 flex flex-col items-center justify-center">
-                            <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase" id="sb-home-name">HOME</span>
-                            <span class="text-6xl font-bold scoreboard-font leading-none text-slate-800" id="sb-home-score">0</span>
-                        </div>
-                        <div class="bg-slate-900/95 text-white w-24 h-24 flex flex-col items-center justify-center border-x-4 border-orange-500 relative">
-                            <span class="text-[9px] font-bold text-gray-400 mb-1 uppercase tracking-widest">LIVE</span>
-                            <span class="text-3xl font-mono font-bold text-orange-500 italic z-10 drop-shadow-lg">VS</span>
-                        </div>
-                        <div class="bg-slate-100/95 backdrop-blur text-slate-900 w-32 h-24 flex flex-col items-center justify-center">
-                            <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase" id="sb-away-name">AWAY</span>
-                            <span class="text-6xl font-bold scoreboard-font leading-none text-slate-800" id="sb-away-score">0</span>
+                        <!-- Info Bar Under Video -->
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6 opacity-0 group-hover:opacity-100 transition duration-500">
+                            <h2 class="text-2xl text-white font-display font-bold">Grand Finals: Team Alpha vs. Neon Strikers</h2>
+                            <p class="text-cyber-cyan text-sm font-bold">Playing: Mobile Legends: Bang Bang</p>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Controls (Admin Only) -->
-                <div class="w-full lg:w-80 bg-slate-900 border-l border-slate-700 p-4 overflow-y-auto admin-only-section flex-col">
-                    <h3 class="text-orange-500 font-bold mb-4 uppercase text-lg tracking-wide border-b border-slate-700 pb-2">Admin Control</h3>
-                    <div class="space-y-4">
-                        <div class="bg-slate-800 p-4 rounded-lg shadow-lg border border-slate-700">
-                            <label class="text-xs font-bold text-gray-400 uppercase block mb-2">Scoreboard Manager</label>
-                            <div class="flex gap-2 mb-2">
-                                <input id="input-home-name" type="text" placeholder="Home Team" class="w-1/2 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-xs text-white">
-                                <input id="input-away-name" type="text" placeholder="Away Team" class="w-1/2 bg-slate-900 border border-slate-600 rounded px-2 py-2 text-xs text-white">
-                            </div>
-                            <button onclick="updateTeamNames()" class="w-full bg-slate-600 hover:bg-slate-500 text-white text-[10px] py-2 rounded mb-3 uppercase font-bold">Update Names</button>
 
-                            <div class="grid grid-cols-2 gap-2">
-                                <button onclick="updateBroadCastScore(1,0)" class="bg-blue-700 hover:bg-blue-600 text-white py-2 rounded font-bold shadow-lg border-b-4 border-blue-900 active:translate-y-1 active:border-0">HOME +1</button>
-                                <button onclick="updateBroadCastScore(0,1)" class="bg-red-700 hover:bg-red-600 text-white py-2 rounded font-bold shadow-lg border-b-4 border-red-900 active:translate-y-1 active:border-0">AWAY +1</button>
-                                <button onclick="updateBroadCastScore(-1,0)" class="bg-slate-700 hover:bg-slate-600 text-xs text-white py-1 rounded">Undo Home</button>
-                                <button onclick="updateBroadCastScore(0,-1)" class="bg-slate-700 hover:bg-slate-600 text-xs text-white py-1 rounded">Undo Away</button>
+                <!-- Chat/Stats Column -->
+                <div class="w-full md:w-80 lg:w-96 bg-cyber-panel border-l border-white/5 flex flex-col h-[40vh] md:h-full">
+                    <div class="flex border-b border-white/5">
+                        <button class="flex-1 py-3 text-xs font-bold uppercase text-cyber-cyan border-b-2 border-cyber-cyan bg-white/5">Stream Chat</button>
+                        <button class="flex-1 py-3 text-xs font-bold uppercase text-slate-500 hover:text-white">Stats</button>
+                    </div>
+                    
+                    <!-- Chat Area -->
+                    <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll font-mono text-xs">
+                        <!-- JS Generated Chat -->
+                        <div class="text-slate-400 text-center text-[10px] my-4">Welcome to the chat room!</div>
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="p-3 border-t border-white/10 bg-cyber-dark">
+                        <form onsubmit="event.preventDefault(); App.logic.sendChat();" class="flex gap-2">
+                            <input type="text" id="chat-input" placeholder="Send a message..." class="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:border-cyber-cyan outline-none text-xs">
+                            <button class="bg-cyber-cyan text-black px-3 rounded font-bold hover:bg-white"><i class="fa-solid fa-paper-plane"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: TOURNAMENTS (Match Center) -->
+            <section id="view-matches" class="page-transition absolute inset-0 hidden overflow-y-auto custom-scroll p-4 md:p-8">
+                <div class="max-w-6xl mx-auto space-y-8">
+                    
+                    <h2 class="font-display text-4xl text-white italic border-l-4 border-cyber-purple pl-4 text-glow">TOURNAMENT BRACKET</h2>
+
+                    <!-- Visual Bracket -->
+                    <div class="glass-panel p-6 overflow-x-auto rounded-xl">
+                        <div class="min-w-[800px] flex justify-between items-center text-center">
+                            <!-- Round 1 -->
+                            <div class="space-y-8 w-40">
+                                <div class="bg-slate-800 border border-slate-600 p-2 rounded relative">
+                                    <div class="text-[10px] text-slate-400">Match 1</div>
+                                    <div class="font-bold text-white">Team Alpha</div>
+                                    <div class="font-bold text-slate-500">Team Bravo</div>
+                                    <!-- Connectors -->
+                                    <div class="absolute top-1/2 -right-8 w-8 h-[1px] bg-slate-600"></div>
+                                    <div class="absolute top-1/2 -right-8 w-4 h-12 border-r border-slate-600 translate-y-0"></div>
+                                </div>
+                                <div class="bg-slate-800 border border-slate-600 p-2 rounded relative">
+                                    <div class="text-[10px] text-slate-400">Match 2</div>
+                                    <div class="font-bold text-white">Neon Strikers</div>
+                                    <div class="font-bold text-slate-500">Dark Side</div>
+                                    <!-- Connectors -->
+                                    <div class="absolute top-1/2 -right-8 w-8 h-[1px] bg-slate-600"></div>
+                                    <div class="absolute bottom-1/2 -right-8 w-4 h-12 border-r border-slate-600 translate-y-0"></div>
+                                </div>
                             </div>
+                            <!-- Round 2 -->
+                            <div class="w-40 relative">
+                                <div class="absolute top-1/2 -left-8 w-8 h-[1px] bg-slate-600"></div>
+                                <div class="bg-slate-900 border border-cyber-cyan p-3 rounded shadow-[0_0_10px_rgba(0,240,255,0.2)]">
+                                    <div class="text-[10px] text-cyber-cyan uppercase font-bold mb-1">Semi-Finals</div>
+                                    <div class="font-bold text-white text-lg">Team Alpha</div>
+                                    <div class="text-xs text-slate-400">vs</div>
+                                    <div class="font-bold text-white text-lg">Neon Strikers</div>
+                                </div>
+                                <div class="absolute top-1/2 -right-8 w-8 h-[1px] bg-slate-600"></div>
+                            </div>
+                            <!-- Finals -->
+                            <div class="w-48">
+                                <div class="bg-gradient-to-r from-cyber-purple to-cyber-pink p-[1px] rounded">
+                                    <div class="bg-black p-4 rounded text-center">
+                                        <i class="fa-solid fa-trophy text-yellow-400 text-2xl mb-2"></i>
+                                        <div class="font-display text-2xl text-white">CHAMPION</div>
+                                        <div class="text-sm text-slate-400">TBD</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Match Cards Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Card Template -->
+                        <div class="glass-panel rounded-xl overflow-hidden group hover:-translate-y-1 transition duration-300">
+                            <div class="bg-slate-900/50 p-3 flex justify-between items-center border-b border-white/5">
+                                <span class="text-xs font-bold text-cyber-cyan uppercase"><i class="fa-solid fa-basketball mr-1"></i> Basketball</span>
+                                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">TODAY 16:00</span>
+                            </div>
+                            <div class="p-6 flex items-center justify-between">
+                                <div class="text-center">
+                                    <div class="w-12 h-12 rounded-full bg-orange-600/20 text-orange-500 border border-orange-500 flex items-center justify-center text-xl mb-2 mx-auto"><i class="fa-solid fa-shield-cat"></i></div>
+                                    <h4 class="font-display text-xl text-white">TIGERS</h4>
+                                </div>
+                                <div class="text-center px-4">
+                                    <div class="text-3xl font-display font-bold text-white italic">VS</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="w-12 h-12 rounded-full bg-blue-600/20 text-blue-500 border border-blue-500 flex items-center justify-center text-xl mb-2 mx-auto"><i class="fa-solid fa-dragon"></i></div>
+                                    <h4 class="font-display text-xl text-white">DRAGONS</h4>
+                                </div>
+                            </div>
+                            <button class="w-full py-3 bg-white/5 hover:bg-cyber-cyan hover:text-black transition font-bold text-xs uppercase">View Match Stats</button>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- SECTION 2: PLAYERS (Admin: Edit | Guest: View Only) -->
-            <section id="section-players" class="absolute inset-0 p-4 lg:p-8 overflow-y-auto hidden">
-                <div class="max-w-6xl mx-auto h-full flex flex-col">
-                    <div class="flex items-end gap-3 mb-6 border-b border-slate-700 pb-4">
-                        <h2 class="text-4xl font-bold text-white uppercase">Compound Roster</h2>
-                        <span class="text-orange-500 font-mono mb-2 admin-only-section">/// ADMIN MODE</span>
-                        <span class="text-green-500 font-mono mb-2 guest-only-section">/// PUBLIC VIEW</span>
+            <!-- VIEW: ROSTER (Cards) -->
+            <section id="view-roster" class="page-transition absolute inset-0 hidden flex flex-col">
+                <!-- Toolbar -->
+                <div class="p-6 flex flex-col md:flex-row justify-between items-center gap-4 bg-cyber-dark/50 border-b border-white/5">
+                    <h2 class="font-display text-3xl text-white italic">ACTIVE ROSTER</h2>
+                    <div class="relative w-full md:w-64">
+                        <i class="fa-solid fa-search absolute left-3 top-3 text-slate-500 text-xs"></i>
+                        <input type="text" id="roster-search" onkeyup="App.logic.filterRoster()" placeholder="Find player..." class="w-full bg-slate-900 border border-slate-700 rounded-full pl-8 pr-4 py-2 text-sm text-white focus:border-cyber-cyan outline-none">
                     </div>
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
-                        <!-- Left & Middle: Form (ADMIN ONLY) -->
-                        <div class="lg:col-span-8 admin-only-section">
-                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <!-- Photo Area -->
-                                <div class="space-y-4">
-                                    <div class="glass-panel p-6 rounded-2xl flex flex-col items-center">
-                                        <div class="relative w-48 h-48 mb-4 group">
-                                            <div class="w-full h-full rounded-full border-4 border-slate-700 overflow-hidden shadow-[0_0_20px_rgba(255,90,0,0.3)] bg-slate-800 relative">
-                                                <img id="player-photo-preview" src="https://via.placeholder.com/150?text=NO+IMAGE" class="w-full h-full object-cover">
-                                                <video id="camera-video" class="absolute inset-0 w-full h-full object-cover hidden" autoplay playsinline></video>
-                                                <canvas id="camera-canvas" class="hidden"></canvas>
-                                            </div>
-                                            <div class="absolute bottom-2 right-2 bg-orange-500 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
-                                                <i class="fa-solid fa-camera"></i>
-                                            </div>
-                                        </div>
-                                        <div class="w-full grid grid-cols-2 gap-2">
-                                            <button onclick="document.getElementById('file-upload').click()" class="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded text-xs font-bold uppercase"><i class="fa-solid fa-upload mr-1"></i> Upload</button>
-                                            <input type="file" id="file-upload" accept="image/*" class="hidden" onchange="handleFileUpload(this)">
-                                            <button id="btn-camera-toggle" onclick="toggleCamera()" class="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded text-xs font-bold uppercase"><i class="fa-solid fa-video mr-1"></i> Camera</button>
-                                        </div>
-                                        <button id="btn-take-photo" onclick="capturePhoto()" class="w-full mt-2 bg-red-600 hover:bg-red-500 text-white py-3 rounded font-bold uppercase hidden animate-pulse">SNAP SHOT</button>
-                                    </div>
-                                </div>
+                </div>
 
-                                <!-- Data Form -->
-                                <div>
-                                    <div class="glass-panel p-6 rounded-2xl h-full">
-                                        <label class="block text-xs font-bold text-orange-500 uppercase mb-2">Codename / Real Name</label>
-                                        <input type="text" id="reg-name" class="w-full bg-slate-900/80 border border-slate-600 text-white px-4 py-3 rounded-lg mb-4 focus:border-orange-500 outline-none" placeholder="Enter Player Name...">
-                                        
-                                        <label class="block text-xs font-bold text-orange-500 uppercase mb-2">Team / Group Affiliation</label>
-                                        <div class="relative mb-6">
-                                            <i class="fa-solid fa-users absolute left-3 top-3.5 text-gray-500"></i>
-                                            <select id="reg-group" class="w-full bg-slate-900/80 border border-slate-600 text-white pl-10 pr-4 py-3 rounded-lg focus:border-orange-500 outline-none appearance-none">
-                                                <option value="">Select Group...</option>
-                                                <!-- Dynamic -->
-                                            </select>
-                                        </div>
-
-                                        <label class="block text-xs font-bold text-orange-500 uppercase mb-3">Divisions</label>
-                                        <div class="flex flex-col gap-2 mb-8">
-                                            <label class="cursor-pointer select-none border border-slate-600 rounded px-3 py-2 hover:bg-slate-800 has-[:checked]:bg-orange-600 has-[:checked]:border-orange-500 transition">
-                                                <input type="checkbox" class="game-check hidden" value="Basketball Game Play">
-                                                <span class="text-xs font-bold uppercase"><i class="fa-solid fa-basketball mr-1"></i> Basketball Game Play</span>
-                                            </label>
-                                            <label class="cursor-pointer select-none border border-slate-600 rounded px-3 py-2 hover:bg-slate-800 has-[:checked]:bg-blue-600 has-[:checked]:border-blue-500 transition">
-                                                <input type="checkbox" class="game-check hidden" value="Mobile Legend Bang Bang Game Play">
-                                                <span class="text-xs font-bold uppercase"><i class="fa-solid fa-mobile mr-1"></i> Mobile Legend Bang Bang Game Play</span>
-                                            </label>
-                                            <label class="cursor-pointer select-none border border-slate-600 rounded px-3 py-2 hover:bg-slate-800 has-[:checked]:bg-green-600 has-[:checked]:border-green-500 transition">
-                                                <input type="checkbox" class="game-check hidden" value="Pool Game Game Play">
-                                                <span class="text-xs font-bold uppercase"><i class="fa-solid fa-circle-dot mr-1"></i> Pool Game Game Play</span>
-                                            </label>
-                                        </div>
-
-                                        <button onclick="registerPlayer()" class="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold py-4 rounded-lg uppercase tracking-wider transition shadow-lg">
-                                            <i class="fa-solid fa-user-plus mr-2"></i> Register
-                                        </button>
-                                    </div>
-                                </div>
-                             </div>
-                        </div>
-
-                        <!-- Right: List (Visible to All) -->
-                        <div class="lg:col-span-4 h-full">
-                            <div class="glass-panel p-6 rounded-2xl h-full flex flex-col">
-                                <div class="flex flex-col gap-3 mb-4 border-b border-gray-700 pb-2">
-                                    <div class="flex justify-between items-center">
-                                        <h3 class="text-xl font-bold text-white">Registered Players</h3>
-                                        <button onclick="fetchPlayers()" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-white"><i class="fa-solid fa-sync"></i></button>
-                                    </div>
-                                    <!-- Search Bar (Robust Feature) -->
-                                    <div class="relative">
-                                        <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-500 text-xs"></i>
-                                        <input type="text" id="roster-search" onkeyup="filterRoster()" placeholder="Search Name or Team..." class="w-full bg-slate-900 border border-slate-700 rounded-full py-1.5 pl-8 pr-4 text-xs text-white focus:border-orange-500 outline-none">
-                                    </div>
-                                </div>
-                                <ul id="players-list" class="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1 max-h-[600px]">
-                                    <!-- Populated by JS -->
-                                </ul>
-                            </div>
-                        </div>
+                <div class="flex-1 overflow-y-auto custom-scroll p-6">
+                    <div id="roster-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <!-- JS Rendered -->
                     </div>
                 </div>
             </section>
 
-            <!-- SECTION 3: MATCH SYSTEM -->
-            <section id="section-matches" class="absolute inset-0 p-8 overflow-y-auto hidden">
-                <div class="max-w-6xl mx-auto">
-                    <h2 class="text-3xl font-bold text-white mb-6 border-l-8 border-blue-500 pl-4">Match Center</h2>
-                    
-                    <!-- Admin Control Panel -->
-                    <div class="admin-only-section bg-slate-100 rounded-2xl overflow-hidden shadow-2xl text-slate-800 mb-8">
-                        <!-- Top Bar -->
-                        <div class="bg-slate-800 p-4 flex justify-between items-center text-white">
-                            <div class="flex items-center gap-4">
-                                <span class="bg-red-600 text-xs font-bold px-2 py-1 rounded animate-pulse">LIVE INPUT</span>
-                                <select id="match-game-type" class="bg-slate-700 border border-slate-600 rounded px-3 py-1 text-sm font-bold text-white outline-none cursor-pointer">
-                                    <option value="Basketball Game Play">Basketball Game Play</option>
-                                    <option value="Mobile Legend Bang Bang Game Play">Mobile Legend Bang Bang Game Play</option>
-                                    <option value="Pool Game Game Play">Pool Game Game Play</option>
-                                </select>
-                            </div>
-                            <div class="text-xs font-mono text-gray-400">SESSION ID: <span id="session-id">8823</span></div>
-                        </div>
-
-                        <!-- Drafting Phase -->
-                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8 relative">
-                            <!-- VS Watermark -->
-                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
-                                <span class="text-9xl font-black">VS</span>
-                            </div>
-
-                            <!-- Team A -->
-                            <div class="bg-white p-4 rounded-xl shadow-lg border-t-4 border-blue-600 relative z-10 transition hover:shadow-2xl">
-                                <h3 class="text-blue-700 font-bold uppercase mb-2">Team A Selection</h3>
-                                <select id="team-a-group" onchange="renderRoster('A')" class="w-full bg-slate-100 border border-slate-300 rounded p-2 text-sm font-bold mb-4 outline-none">
-                                    <option value="">Select Group...</option>
-                                </select>
-                                <div class="h-64 overflow-y-auto border border-gray-200 rounded p-2 mb-4 bg-gray-50 custom-scrollbar" id="roster-a">
-                                    <p class="text-xs text-gray-400 text-center mt-10">Select a group to see players</p>
-                                </div>
-                                <div class="flex items-center justify-between bg-blue-50 p-3 rounded border border-blue-100">
-                                    <span class="text-xs font-bold text-blue-800 uppercase">Score</span>
-                                    <input type="number" id="score-a" class="w-20 text-3xl font-bold text-center bg-white border border-blue-200 rounded outline-none focus:border-blue-500" value="0">
-                                </div>
-                            </div>
-
-                            <!-- Team B -->
-                            <div class="bg-white p-4 rounded-xl shadow-lg border-t-4 border-red-600 relative z-10 transition hover:shadow-2xl">
-                                <h3 class="text-red-700 font-bold uppercase mb-2">Team B Selection</h3>
-                                <select id="team-b-group" onchange="renderRoster('B')" class="w-full bg-slate-100 border border-slate-300 rounded p-2 text-sm font-bold mb-4 outline-none">
-                                    <option value="">Select Group...</option>
-                                </select>
-                                <div class="h-64 overflow-y-auto border border-gray-200 rounded p-2 mb-4 bg-gray-50 custom-scrollbar" id="roster-b">
-                                    <p class="text-xs text-gray-400 text-center mt-10">Select a group to see players</p>
-                                </div>
-                                <div class="flex items-center justify-between bg-red-50 p-3 rounded border border-red-100">
-                                    <span class="text-xs font-bold text-red-800 uppercase">Score</span>
-                                    <input type="number" id="score-b" class="w-20 text-3xl font-bold text-center bg-white border border-red-200 rounded outline-none focus:border-red-500" value="0">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Submit -->
-                        <div class="bg-gray-50 p-6 border-t border-gray-200 flex justify-center">
-                            <button id="btn-submit-match" onclick="submitMatch()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 px-16 rounded-full shadow-xl transform transition hover:scale-105 flex items-center gap-2">
-                                <i class="fa-solid fa-check-double text-green-400"></i> FINALIZE MATCH
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Recent History (Visible to All) -->
-                    <div>
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-gray-400 font-bold text-xs uppercase tracking-widest">Recent Match Logs</h3>
-                            <button onclick="fetchMatchHistory()" class="text-xs bg-slate-800 px-2 py-1 rounded text-white"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
-                        </div>
-                        <div id="matches-history" class="space-y-3"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- SECTION 4: ANALYTICS (Public) -->
-            <section id="section-analytics" class="absolute inset-0 p-8 overflow-y-auto hidden">
-                <div class="max-w-5xl mx-auto h-full flex flex-col">
-                    <div class="flex items-center justify-between mb-6">
+            <!-- VIEW: ADMIN PANEL -->
+            <section id="view-admin" class="page-transition absolute inset-0 hidden flex flex-col bg-slate-900 overflow-y-auto custom-scroll">
+                <div class="p-8 max-w-7xl mx-auto w-full">
+                    <div class="flex justify-between items-center mb-8">
                         <div>
-                            <h2 class="text-3xl font-bold text-white border-l-8 border-green-500 pl-4">Stats Center</h2>
-                            <p class="text-gray-400 text-sm mt-1 ml-6">Public Performance Data</p>
+                            <h2 class="font-display text-4xl text-white">ADMIN DASHBOARD</h2>
+                            <p class="text-slate-400 text-sm">Manage Players, Matches and Settings.</p>
+                        </div>
+                        <button onclick="App.ui.openCreateModal()" class="bg-cyber-cyan text-black font-bold px-6 py-3 rounded hover:bg-white transition shadow-[0_0_15px_rgba(0,240,255,0.3)]">
+                            <i class="fa-solid fa-plus mr-2"></i> ADD PLAYER
+                        </button>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-slate-800 p-4 rounded border-l-4 border-cyber-cyan">
+                            <div class="text-slate-400 text-xs uppercase font-bold">Total Players</div>
+                            <div class="text-2xl text-white font-display" id="stat-total-players">0</div>
+                        </div>
+                        <div class="bg-slate-800 p-4 rounded border-l-4 border-cyber-pink">
+                            <div class="text-slate-400 text-xs uppercase font-bold">Matches Played</div>
+                            <div class="text-2xl text-white font-display">14</div>
                         </div>
                     </div>
-                    <div class="glass-panel p-4 rounded-t-xl border-b border-white/10 flex flex-wrap items-center gap-4">
-                        <select id="analytics-player-select" onchange="updateChart()" class="bg-slate-900 text-white border border-slate-600 rounded px-4 py-2 text-sm font-bold outline-none focus:border-green-500">
-                            <option value="">Select Player...</option>
-                        </select>
-                        <div class="ml-auto bg-slate-900 px-4 py-2 rounded-lg border border-slate-700">
-                            <span class="text-xs text-gray-500 uppercase font-bold mr-2">Rating</span>
-                            <span id="current-rating" class="text-white text-xl font-mono">---</span>
-                        </div>
-                    </div>
-                    <div class="glass-panel p-6 flex-1 rounded-b-xl shadow-2xl relative">
-                        <div class="chart-container h-full w-full"><canvas id="performanceChart"></canvas></div>
+
+                    <!-- Table -->
+                    <div class="glass-panel rounded-xl overflow-hidden">
+                        <table class="w-full text-left text-sm text-slate-400">
+                            <thead class="bg-slate-950 text-cyber-cyan uppercase font-bold text-xs">
+                                <tr>
+                                    <th class="px-6 py-4">Player</th>
+                                    <th class="px-6 py-4">Group</th>
+                                    <th class="px-6 py-4">Tier</th>
+                                    <th class="px-6 py-4">Games</th>
+                                    <th class="px-6 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-table-body" class="divide-y divide-slate-800">
+                                <!-- JS Populated -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
 
             <!-- Bottom Ticker -->
-            <div class="h-8 bg-slate-900/90 border-t border-slate-700 flex items-center z-40 text-xs font-mono text-orange-400 uppercase tracking-widest relative overflow-hidden">
-                <div class="px-3 bg-slate-800 h-full flex items-center z-10 font-bold">LATEST UPDATES:</div>
-                <div class="ticker-wrap flex-1">
+            <div class="h-8 bg-black border-t border-cyber-cyan/30 flex items-center z-20 text-[10px] uppercase font-mono tracking-wider relative">
+                <div class="px-4 bg-cyber-cyan text-black font-bold h-full flex items-center skew-x-[-10deg] ml-[-10px] pl-6 border-r-2 border-white">LATEST UPDATES</div>
+                <div class="ticker-wrap flex-1 text-cyber-cyan text-shadow">
                     <div class="ticker">
-                        Welcome to Kwangkoh Compound 9th Anniversary • Registration is now open! • Upcoming Basketball Game Play Match: North Elite vs South Kings @ 4PM • Mobile Legend Bang Bang Game Play Tournament Bracket Released • Pool Game Game Play Table Reserved for Finals • Contact Admin for disputes • Enjoy the games!
+                        KWANGKOH COMPOUND 9TH ANNIVERSARY • REGISTRATION CLOSING SOON • ADMINS: PLEASE UPDATE BRACKETS • FINALS SCHEDULED FOR 20:00 HKT • GOOD LUCK HAVE FUN
                     </div>
                 </div>
             </div>
 
-        </div>
-    </main>
+        </main>
+    </div>
 
+    <!-- Mobile Bottom Navigation -->
+    <nav class="md:hidden flex bg-cyber-dark border-t border-white/10 z-50 mobile-bottom-nav pb-safe">
+        <script>
+            const mobileNavItem = (id, icon, label) => `
+                <button onclick="App.nav.go('${id}')" id="nav-m-${id}" class="flex-1 py-3 flex flex-col items-center gap-1 text-slate-500 transition-colors border-t-2 border-transparent">
+                    <i class="fa-solid ${icon} text-lg mb-0.5"></i>
+                    <span class="text-[9px] font-bold uppercase tracking-wide">${label}</span>
+                </button>`;
+            document.write(mobileNavItem('live', 'fa-gamepad', 'Live'));
+            document.write(mobileNavItem('matches', 'fa-trophy', 'Match'));
+            document.write(mobileNavItem('roster', 'fa-users', 'Roster'));
+            document.write(mobileNavItem('admin', 'fa-database', 'Admin')); // Hidden via CSS if not admin
+        </script>
+    </nav>
+
+    <!-- ================= LOGIC ================= -->
     <script>
-        // --- CONFIGURATION ---
-        const SUPABASE_URL = 'https://airrabkojxzzilgdcraz.supabase.co';
+        // CONFIG
+        const SUPABASE_URL = 'https://airrabkojxzzilgdcraz.supabase.co'; // Keep existing logic
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpcnJhYmtvanh6emlsZ2RjcmF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NjY4MjEsImV4cCI6MjA3NDQ0MjgyMX0._XUe8Mk7jjY4RGyzaJ44mN5slfIP8pPYLNjcJYQkg-g';
-        const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let myChart = null;
-        let allPlayers = [];
-        let currentPhotoBase64 = null;
-        let pubPhotoBase64 = null; // Separate variable for public registration
-        let isAdmin = false;
+        // MOCK DATA (To make it work immediately for demo without DB connection)
+        const MOCK_PLAYERS = [
+            { id: 1, name: 'ShadowSlayer', age: 22, category: 'Legend', group_name: 'Neon Strikers', games: ['Mobile Legends'], photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80' },
+            { id: 2, name: 'HoopsKing', age: 25, category: 'Pro', group_name: 'Team Alpha', games: ['Basketball'], photo: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80' },
+            { id: 3, name: 'SniperWolf', age: 21, category: 'Rookie', group_name: 'Dark Side', games: ['Billiards', 'Mobile Legends'], photo: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=150&q=80' },
+            { id: 4, name: 'Viper', age: 24, category: 'Amateur', group_name: 'Team Alpha', games: ['Basketball'], photo: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80' },
+        ];
 
-        // --- UTILITY ---
-        // Robust Function: Capitalize words for consistent Team Names
-        function titleCase(str) {
-            return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-        }
-
-        // --- 1. STARTUP & AUTH ---
-        function checkSession() {
-            document.getElementById('login-modal').classList.remove('hidden'); 
-            const savedRole = localStorage.getItem('kwangkoh_role');
-            if (savedRole === 'admin') {
-                document.getElementById('login-modal').classList.add('hidden');
-                document.body.classList.add('is-admin');
-                isAdmin = true;
-                showSection('players');
-                fetchPlayers();
-                fetchMatchHistory();
-            } else if (savedRole === 'guest') {
-                document.getElementById('login-modal').classList.add('hidden');
-                document.body.classList.remove('is-admin');
-                isAdmin = false;
-                showSection('broadcast');
-                fetchPlayers();
-                fetchMatchHistory();
-            }
-        }
-
-        function guestLogin(isRestored = false) {
-            document.getElementById('login-modal').classList.add('hidden');
-            document.body.classList.remove('is-admin');
-            isAdmin = false;
-            localStorage.setItem('kwangkoh_role', 'guest');
-            showSection('broadcast');
-            fetchPlayers();
-            fetchMatchHistory();
-            if(!isRestored) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Guest Mode',
-                    text: 'Viewing in Read-Only mode.',
-                    timer: 1500, showConfirmButton: false
-                });
-            }
-        }
-
-        function adminLogin() {
-            const pass = document.getElementById('admin-pass').value;
-            if (pass === "admin") {
-                document.getElementById('login-modal').classList.add('hidden');
-                document.body.classList.add('is-admin');
-                isAdmin = true;
-                localStorage.setItem('kwangkoh_role', 'admin');
-                const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
-                Toast.fire({ icon: 'success', title: 'Admin Access Granted' });
-                showSection('players'); 
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        }
-
-        function systemLogout() {
-            localStorage.removeItem('kwangkoh_role');
-            location.reload();
-        }
-
-        // --- 2. PUBLIC REGISTRATION (ROBUST "ENTER TEAM GROUP" LOGIC) ---
-        function openPublicRegModal() {
-            document.getElementById('login-modal').classList.add('hidden');
-            document.getElementById('public-reg-modal').classList.remove('hidden');
-            populatePublicGroups();
-        }
-
-        function closePublicRegModal() {
-            document.getElementById('public-reg-modal').classList.add('hidden');
-            document.getElementById('login-modal').classList.remove('hidden');
-            stopPubCamera();
-        }
-
-        // --- Public Camera Logic ---
-        let pubVideoStream = null;
-        function handlePubFileUpload(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('pub-photo-preview').src = e.target.result;
-                    pubPhotoBase64 = e.target.result;
-                    stopPubCamera();
+        // APP NAMESPACE
+        const App = {
+            state: {
+                isAdmin: false,
+                players: [...MOCK_PLAYERS], // Initialize with mock
+                currentView: 'live',
+                tempPhoto: null
+            },
+            
+            // UI & Navigation
+            ui: {
+                toggleModal: (id, show) => {
+                    const el = document.getElementById(id);
+                    if(show) { el.classList.remove('hidden'); el.classList.add('flex'); }
+                    else { el.classList.add('hidden'); el.classList.remove('flex'); App.camera.stop(); }
+                },
+                openCreateModal: () => {
+                    document.getElementById('modal-title').innerText = "NEW PLAYER REGISTRATION";
+                    document.getElementById('crud-mode').value = 'create';
+                    document.getElementById('pub-name').value = '';
+                    document.getElementById('pub-age').value = '';
+                    document.getElementById('pub-preview').src = 'https://via.placeholder.com/150?text=NO+PHOTO';
+                    // Uncheck boxes
+                    document.querySelectorAll('.pub-game').forEach(c => c.checked = false);
+                    App.ui.toggleModal('public-reg-modal', true);
+                },
+                toast: (msg, icon = 'success') => {
+                    const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, background: '#0f172a', color: '#fff', iconColor: '#00f0ff' });
+                    Toast.fire({ icon: icon, title: msg });
                 }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-        async function togglePubCamera() {
-            const video = document.getElementById('pub-camera-video');
-            if (pubVideoStream) { stopPubCamera(); return; }
-            try {
-                pubVideoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = pubVideoStream;
-                video.classList.remove('hidden');
-                document.getElementById('pub-photo-preview').classList.add('hidden');
-                document.getElementById('pub-btn-snap').classList.remove('hidden');
-            } catch (err) { Swal.fire('Error', 'Camera Access Denied', 'error'); }
-        }
-        function capturePubPhoto() {
-            const video = document.getElementById('pub-camera-video');
-            const canvas = document.getElementById('pub-camera-canvas');
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            pubPhotoBase64 = canvas.toDataURL('image/jpeg');
-            document.getElementById('pub-photo-preview').src = pubPhotoBase64;
-            stopPubCamera();
-        }
-        function stopPubCamera() {
-            if (pubVideoStream) { pubVideoStream.getTracks().forEach(track => track.stop()); pubVideoStream = null; }
-            document.getElementById('pub-camera-video').classList.add('hidden');
-            document.getElementById('pub-photo-preview').classList.remove('hidden');
-            document.getElementById('pub-btn-snap').classList.add('hidden');
-        }
+            },
 
-        // --- Group Logic ---
-        function populatePublicGroups() {
-            const existingGroups = [...new Set(allPlayers.map(p => p.group_name).filter(Boolean))];
-            const defaults = ["North Elite", "South Kings", "West Vipers", "East Dragons", "Free Agent"];
-            // Merge and remove duplicates case-insensitively
-            const combined = [...defaults, ...existingGroups];
-            const uniqueGroups = [...new Set(combined.map(g => titleCase(g)))];
+            nav: {
+                go: (viewId) => {
+                    // Auth Check for Admin View
+                    if(viewId === 'admin' && !App.state.isAdmin) return App.ui.toast("Access Denied", "error");
 
-            const select = document.getElementById('pub-reg-group');
-            let opts = `<option value="">-- Select Existing Team --</option>`;
-            uniqueGroups.forEach(g => opts += `<option value="${g}">${g}</option>`);
-            opts += `<option value="CREATE_NEW_TEAM" class="bg-green-700 text-white font-bold">➕ Create New Team...</option>`;
-            select.innerHTML = opts;
-            
-            handleGroupChange(select); // reset UI
-        }
+                    App.state.currentView = viewId;
+                    
+                    // Hide all sections
+                    document.querySelectorAll('section').forEach(el => el.classList.add('hidden'));
+                    document.getElementById(`view-${viewId}`).classList.remove('hidden');
+                    
+                    // Update Nav Styles
+                    const ids = ['live', 'matches', 'roster', 'admin'];
+                    ids.forEach(id => {
+                        const dBtn = document.getElementById(`nav-d-${id}`);
+                        const mBtn = document.getElementById(`nav-m-${id}`);
+                        
+                        // Desktop Reset
+                        if(dBtn) {
+                            dBtn.querySelector('div').classList.remove('opacity-100', 'h-full');
+                            dBtn.querySelector('div').classList.add('opacity-0', 'h-0');
+                            dBtn.querySelector('i').classList.remove('text-cyber-cyan', 'text-glow');
+                            dBtn.querySelector('span').classList.remove('text-white');
+                            dBtn.classList.remove('bg-white/5');
+                        }
+                        // Mobile Reset
+                        if(mBtn) {
+                            mBtn.classList.remove('text-cyber-cyan', 'border-cyber-cyan', 'bg-white/5');
+                            mBtn.classList.add('text-slate-500', 'border-transparent');
+                        }
+                    });
 
-        function handleGroupChange(selectElement) {
-            const customInput = document.getElementById('custom-group-container');
-            const statsInfo = document.getElementById('group-stats-info');
-            const countSpan = document.getElementById('group-member-count');
-            
-            if (selectElement.value === "CREATE_NEW_TEAM") {
-                customInput.classList.remove('hidden');
-                statsInfo.classList.add('hidden');
-                document.getElementById('pub-reg-group-custom').focus();
-            } else if (selectElement.value) {
-                customInput.classList.add('hidden');
-                // Robust: Calculate member count for existing group
-                const count = allPlayers.filter(p => p.group_name && p.group_name.toLowerCase() === selectElement.value.toLowerCase()).length;
-                countSpan.innerText = count;
-                statsInfo.classList.remove('hidden');
-            } else {
-                customInput.classList.add('hidden');
-                statsInfo.classList.add('hidden');
-            }
-        }
+                    // Active State Desktop
+                    const activeD = document.getElementById(`nav-d-${viewId}`);
+                    if(activeD) {
+                        activeD.classList.add('bg-white/5');
+                        activeD.querySelector('div').classList.remove('opacity-0', 'h-0');
+                        activeD.querySelector('div').classList.add('opacity-100', 'h-full');
+                        activeD.querySelector('i').classList.add('text-cyber-cyan', 'text-glow');
+                        activeD.querySelector('span').classList.add('text-white');
+                    }
+                    
+                    // Active State Mobile
+                    const activeM = document.getElementById(`nav-m-${viewId}`);
+                    if(activeM) {
+                        activeM.classList.remove('text-slate-500', 'border-transparent');
+                        activeM.classList.add('text-cyber-cyan', 'border-cyber-cyan', 'bg-white/5');
+                    }
 
-        async function publicRegisterSubmit() {
-            const btn = document.getElementById('btn-pub-submit');
-            const name = document.getElementById('pub-reg-name').value.trim();
-            const age = document.getElementById('pub-reg-age').value.trim();
-            const category = document.getElementById('pub-reg-category').value;
-            let group = document.getElementById('pub-reg-group').value;
-            
-            // Handle Custom Group
-            if (group === "CREATE_NEW_TEAM") {
-                const customVal = document.getElementById('pub-reg-group-custom').value.trim();
-                if (!customVal) return Swal.fire('Missing Data', 'Please enter a name for the new team.', 'warning');
-                group = titleCase(customVal); // Auto-format
-            }
-
-            const games = Array.from(document.querySelectorAll('.pub-game-check:checked')).map(cb => cb.value);
-
-            // Validation
-            if (!name || !group || games.length === 0 || !age) {
-                return Swal.fire('Incomplete', 'Please fill in Name, Age, Team, and select at least one Game.', 'warning');
-            }
-
-            btn.innerHTML = '<span class="loader"></span> Processing...';
-            btn.disabled = true;
-
-            // Duplicate Check
-            const { data: existing } = await dbClient.from('players').select('name').ilike('name', name);
-            if (existing && existing.length > 0) {
-                btn.innerHTML = 'Submit Registration'; btn.disabled = false;
-                return Swal.fire('Name Taken', `The name "${name}" is already registered.`, 'error');
-            }
-
-            const { error } = await dbClient.from('players').insert([{ 
-                name, group_name: group, games, age: parseInt(age), category, photo: pubPhotoBase64 
-            }]);
-
-            btn.innerHTML = 'Submit Registration';
-            btn.disabled = false;
-
-            if (error) {
-                Swal.fire('Error', error.message, 'error');
-            } else {
-                closePublicRegModal();
-                // Reset Fields
-                document.getElementById('pub-reg-name').value = '';
-                document.getElementById('pub-reg-age').value = '';
-                document.getElementById('pub-reg-group-custom').value = '';
-                pubPhotoBase64 = null;
-                document.getElementById('pub-photo-preview').src = 'https://via.placeholder.com/150?text=PHOTO';
-                
-                await fetchPlayers();
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Welcome Aboard!',
-                    text: `Registered to ${group}.`,
-                    confirmButtonText: 'Enter Site'
-                }).then(() => guestLogin());
-            }
-        }
-
-        // --- 3. CORE & NAVIGATION ---
-        async function init() {
-            checkConnection();
-            checkSession(); 
-            await fetchPlayers();
-            setupChart();
-            document.getElementById('session-id').innerText = Math.floor(1000 + Math.random() * 9000);
-            updateMVP(); // Initial MVP
-        }
-
-        async function checkConnection() {
-            const statusDiv = document.getElementById('db-status');
-            const { error } = await dbClient.from('players').select('count', { count: 'exact', head: true });
-            if (error) {
-                statusDiv.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> OFFLINE`;
-                statusDiv.classList.add('text-red-600');
-            } else {
-                statusDiv.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> ONLINE`;
-                statusDiv.classList.add('text-green-400', 'border-green-500/30');
-            }
-        }
-
-        function showSection(sectionId) {
-            ['broadcast', 'players', 'matches', 'analytics'].forEach(id => {
-                document.getElementById(`section-${id}`).classList.add('hidden');
-                document.getElementById(`nav-${id}`).classList.remove('nav-active');
-                document.getElementById(`nav-${id}`).classList.add('text-gray-400');
-            });
-            document.getElementById(`section-${sectionId}`).classList.remove('hidden');
-            const activeNav = document.getElementById(`nav-${sectionId}`);
-            activeNav.classList.add('nav-active');
-            activeNav.classList.remove('text-gray-400');
-
-            if(sectionId === 'matches') { fetchMatchHistory(); populateGroupSelects(); }
-            if(sectionId === 'analytics') updateChart();
-            if(sectionId !== 'players') stopCamera();
-        }
-
-        // --- 4. PLAYER MGMT (ADMIN) ---
-        // (Similar camera logic as public, but for admin section)
-        let videoStream = null;
-        function handleFileUpload(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('player-photo-preview').src = e.target.result;
-                    currentPhotoBase64 = e.target.result;
-                    stopCamera();
+                    // Side Effects
+                    if(viewId === 'roster') App.logic.renderRoster();
+                    if(viewId === 'admin') App.logic.renderAdminTable();
                 }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-        async function toggleCamera() {
-            const video = document.getElementById('camera-video');
-            if (videoStream) { stopCamera(); return; }
-            try {
-                videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = videoStream;
-                video.classList.remove('hidden');
-                document.getElementById('player-photo-preview').classList.add('hidden');
-                document.getElementById('btn-take-photo').classList.remove('hidden');
-                document.getElementById('btn-camera-toggle').innerHTML = '<i class="fa-solid fa-times mr-1"></i> Close';
-            } catch (err) { alert("Camera Error"); }
-        }
-        function capturePhoto() {
-            const video = document.getElementById('camera-video');
-            const canvas = document.getElementById('camera-canvas');
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            currentPhotoBase64 = canvas.toDataURL('image/jpeg');
-            document.getElementById('player-photo-preview').src = currentPhotoBase64;
-            stopCamera();
-        }
-        function stopCamera() {
-            if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; }
-            document.getElementById('camera-video').classList.add('hidden');
-            document.getElementById('player-photo-preview').classList.remove('hidden');
-            document.getElementById('btn-take-photo').classList.add('hidden');
-            document.getElementById('btn-camera-toggle').innerHTML = '<i class="fa-solid fa-video mr-1"></i> Camera';
-        }
+            },
 
-        async function registerPlayer() {
-            const name = document.getElementById('reg-name').value.trim();
-            const group = document.getElementById('reg-group').value;
-            const games = Array.from(document.querySelectorAll('.game-check:checked')).map(cb => cb.value);
+            // Authentication
+            auth: {
+                init: () => {
+                    const role = localStorage.getItem('kw_role');
+                    if(role === 'admin') App.auth.setAdmin(true);
+                    else if(role === 'guest') App.auth.guest(true);
+                    else App.ui.toggleModal('login-modal', true);
+                    
+                    // Start simulations
+                    App.logic.simulateChat();
+                    App.logic.populatePublicGroups();
+                },
+                guest: (silent = false) => {
+                    App.ui.toggleModal('login-modal', false);
+                    App.auth.setAdmin(false);
+                    localStorage.setItem('kw_role', 'guest');
+                    if(!silent) App.ui.toast('Welcome to the Arena');
+                },
+                admin: () => {
+                    const pass = document.getElementById('admin-pass').value;
+                    if(pass === 'admin') { // Hardcoded for demo
+                        App.auth.setAdmin(true);
+                        App.ui.toggleModal('login-modal', false);
+                        localStorage.setItem('kw_role', 'admin');
+                        App.ui.toast('System Access Granted');
+                    } else {
+                        App.ui.toast('Invalid Passcode', 'error');
+                    }
+                },
+                setAdmin: (isAdmin) => {
+                    App.state.isAdmin = isAdmin;
+                    const elements = document.querySelectorAll('.admin-only');
+                    elements.forEach(el => el.classList.toggle('hidden', !isAdmin));
+                    
+                    const badge = document.getElementById('admin-badge');
+                    if(isAdmin) badge.classList.remove('hidden');
+                    else badge.classList.add('hidden');
 
-            if (!name || !group || games.length === 0) return Swal.fire('Missing Data', 'Fill all fields.', 'warning');
+                    const adminNav = document.getElementById('nav-d-admin');
+                    if(adminNav) adminNav.style.display = isAdmin ? 'flex' : 'none';
+                    const adminNavM = document.getElementById('nav-m-admin');
+                    if(adminNavM) adminNavM.style.display = isAdmin ? 'flex' : 'none';
+                },
+                logout: () => {
+                    localStorage.removeItem('kw_role');
+                    location.reload();
+                }
+            },
 
-            const { data: existing } = await dbClient.from('players').select('name').ilike('name', name);
-            if(existing && existing.length > 0) return Swal.fire('Error', 'Name already exists', 'error');
+            // Camera System
+            camera: {
+                stream: null,
+                toggle: async (prefix) => {
+                    const vid = document.getElementById(`${prefix}-video`);
+                    const img = document.getElementById(`${prefix}-preview`);
+                    const snapBtn = document.getElementById(`${prefix}-snap`);
+                    
+                    if(App.camera.stream) {
+                        App.camera.stop();
+                        vid.classList.add('hidden');
+                        img.classList.remove('hidden');
+                        snapBtn.classList.add('hidden');
+                        return;
+                    }
 
-            const { error } = await dbClient.from('players').insert([{ name, games, group_name: group, photo: currentPhotoBase64 }]);
-            if (error) Swal.fire('Error', error.message, 'error');
-            else {
-                Swal.fire({ icon: 'success', title: 'Player Registered', timer: 1500, showConfirmButton: false });
-                document.getElementById('reg-name').value = '';
-                currentPhotoBase64 = null;
-                document.getElementById('player-photo-preview').src = 'https://via.placeholder.com/150?text=NO+IMAGE';
-                fetchPlayers();
-            }
-        }
+                    try {
+                        App.camera.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                        vid.srcObject = App.camera.stream;
+                        vid.classList.remove('hidden');
+                        img.classList.add('hidden');
+                        snapBtn.classList.remove('hidden');
+                    } catch(e) {
+                        App.ui.toast('Camera Access Denied', 'error');
+                    }
+                },
+                snap: (prefix) => {
+                    const vid = document.getElementById(`${prefix}-video`);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = vid.videoWidth;
+                    canvas.height = vid.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.translate(canvas.width, 0);
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(vid, 0, 0);
+                    
+                    const data = canvas.toDataURL('image/jpeg');
+                    App.state.tempPhoto = data;
+                    document.getElementById(`${prefix}-preview`).src = data;
+                    App.camera.toggle(prefix); 
+                },
+                handleUpload: (input, imgId) => {
+                    if (input.files && input.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            document.getElementById(imgId).src = e.target.result;
+                            App.state.tempPhoto = e.target.result;
+                        };
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                },
+                stop: () => {
+                    if(App.camera.stream) {
+                        App.camera.stream.getTracks().forEach(t => t.stop());
+                        App.camera.stream = null;
+                    }
+                }
+            },
 
-        async function fetchPlayers() {
-            const { data, error } = await dbClient.from('players').select('*').order('created_at', { ascending: false });
-            if (error) return;
-            allPlayers = data;
-            
-            // Populate Admin Group Select
-            const groups = [...new Set(allPlayers.map(p => p.group_name).filter(Boolean))].sort();
-            const grpSelect = document.getElementById('reg-group');
-            grpSelect.innerHTML = `<option value="">Select Group...</option>` + groups.map(g => `<option value="${g}">${g}</option>`).join('') + `<option value="Free Agent">Free Agent</option>`;
+            // Business Logic
+            logic: {
+                renderRoster: () => {
+                    const grid = document.getElementById('roster-grid');
+                    const filtered = App.logic.getFilteredPlayers();
+                    
+                    grid.innerHTML = filtered.map(p => {
+                        const img = p.photo || `https://ui-avatars.com/api/?name=${p.name}&background=random`;
+                        const borderColor = p.category === 'Legend' ? 'border-yellow-400' : (p.category === 'Pro' ? 'border-cyber-purple' : 'border-slate-700');
+                        
+                        // Game Icons
+                        const gameIcons = p.games.map(g => {
+                            if(g === 'Basketball') return '<i class="fa-solid fa-basketball text-orange-500"></i>';
+                            if(g === 'Mobile Legends') return '<i class="fa-solid fa-mobile text-blue-500"></i>';
+                            return '<i class="fa-solid fa-circle-dot text-green-500"></i>';
+                        }).join(' ');
 
-            renderPlayerList(allPlayers);
+                        return `
+                        <div class="group relative bg-cyber-panel border-2 ${borderColor} rounded-xl overflow-hidden shadow-lg transition transform hover:-translate-y-2 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)]">
+                            <!-- Image -->
+                            <div class="h-48 w-full bg-slate-800 relative">
+                                <img src="${img}" class="w-full h-full object-cover">
+                                <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black to-transparent h-20"></div>
+                                <div class="absolute bottom-2 left-3">
+                                    <h3 class="text-white font-display text-2xl tracking-wide">${p.name}</h3>
+                                    <p class="text-[10px] text-cyber-cyan uppercase font-bold">${p.group_name || 'Free Agent'}</p>
+                                </div>
+                                <div class="absolute top-2 right-2 bg-black/70 backdrop-blur px-2 py-0.5 rounded text-[10px] uppercase font-bold text-white border border-white/20">
+                                    ${p.category}
+                                </div>
+                            </div>
+                            <!-- Stats / Details (Revealed on hover style) -->
+                            <div class="p-4 bg-cyber-dark/90 relative">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs text-slate-500 font-bold">AGE: <span class="text-white">${p.age}</span></span>
+                                    <div class="flex gap-2 text-sm">${gameIcons}</div>
+                                </div>
+                                <div class="w-full h-1 bg-slate-800 rounded overflow-hidden">
+                                    <div class="bg-cyber-cyan h-full" style="width: ${Math.floor(Math.random() * 40 + 60)}%"></div>
+                                </div>
+                                <div class="text-[9px] text-right mt-1 text-cyber-cyan">Win Rate</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                },
 
-            // Populate Analytics
-            const opts = data.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-            document.getElementById('analytics-player-select').innerHTML = '<option value="">Select Player...</option>' + opts;
-        }
+                renderAdminTable: () => {
+                    const tbody = document.getElementById('admin-table-body');
+                    document.getElementById('stat-total-players').innerText = App.state.players.length;
+                    
+                    tbody.innerHTML = App.state.players.map(p => `
+                        <tr class="hover:bg-white/5 transition group">
+                            <td class="px-6 py-4 flex items-center gap-3">
+                                <img src="${p.photo}" class="w-8 h-8 rounded-full border border-slate-600 object-cover">
+                                <span class="font-bold text-white">${p.name}</span>
+                            </td>
+                            <td class="px-6 py-4">${p.group_name}</td>
+                            <td class="px-6 py-4"><span class="bg-slate-800 px-2 py-1 rounded text-xs border border-slate-700">${p.category}</span></td>
+                            <td class="px-6 py-4 text-xs text-slate-400">${p.games.join(', ')}</td>
+                            <td class="px-6 py-4 text-right">
+                                <button onclick="App.logic.editPlayer(${p.id})" class="text-cyber-cyan hover:text-white mr-3"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="App.logic.deletePlayer(${p.id})" class="text-red-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+                },
 
-        // Robust Feature: Search Filter
-        function filterRoster() {
-            const term = document.getElementById('roster-search').value.toLowerCase();
-            const filtered = allPlayers.filter(p => p.name.toLowerCase().includes(term) || (p.group_name && p.group_name.toLowerCase().includes(term)));
-            renderPlayerList(filtered);
-        }
+                getFilteredPlayers: () => {
+                    const term = document.getElementById('roster-search').value.toLowerCase();
+                    return App.state.players.filter(p => p.name.toLowerCase().includes(term) || (p.group_name && p.group_name.toLowerCase().includes(term)));
+                },
 
-        function renderPlayerList(players) {
-            const list = document.getElementById('players-list');
-            if (players.length === 0) { list.innerHTML = '<li class="text-center text-gray-500 text-xs py-4">No players found</li>'; return; }
-            list.innerHTML = players.map(p => {
-                const avatar = p.photo || `https://ui-avatars.com/api/?name=${p.name}&background=random`;
-                const cat = p.category ? `• <span class="text-orange-400">${p.category}</span>` : '';
-                return `
-                <li class="bg-slate-800/80 p-3 rounded-lg border border-slate-700 flex items-center gap-3 transition hover:bg-slate-700">
-                    <img src="${avatar}" class="w-10 h-10 rounded-full object-cover border border-slate-600">
-                    <div class="flex-1">
-                        <div class="flex justify-between">
-                            <span class="font-bold text-slate-100 text-sm">${p.name}</span>
-                            <span class="text-[10px] bg-slate-900 px-2 py-0.5 rounded text-gray-300 border border-slate-700">${p.group_name || 'Free Agent'}</span>
-                        </div>
-                        <div class="flex gap-1 mt-1 text-[9px] text-gray-400">${p.games ? p.games.join(', ') : ''} ${cat}</div>
-                    </div>
-                </li>`;
-            }).join('');
-        }
+                populatePublicGroups: () => {
+                    const groups = [...new Set(App.state.players.map(p => p.group_name).filter(Boolean))].sort();
+                    let html = '<option value="">-- Select Team --</option>';
+                    groups.forEach(g => html += `<option value="${g}">${g}</option>`);
+                    html += '<option value="NEW" class="font-bold text-cyber-cyan">+ Create New Team</option>';
+                    document.getElementById('pub-group').innerHTML = html;
+                },
 
-        // --- 5. MATCH SYSTEM (ROBUST) ---
-        function populateGroupSelects() {
-            const groups = [...new Set(allPlayers.map(p => p.group_name || 'Free Agent'))];
-            const opts = '<option value="">Select Group...</option>' + groups.map(g => `<option value="${g}">${g}</option>`).join('');
-            document.getElementById('team-a-group').innerHTML = opts;
-            document.getElementById('team-b-group').innerHTML = opts;
-        }
+                handleGroupSelect: (el) => {
+                    const custom = document.getElementById('pub-group-custom');
+                    if(el.value === 'NEW') { custom.classList.remove('hidden'); custom.focus(); }
+                    else custom.classList.add('hidden');
+                },
 
-        function renderRoster(teamSide) {
-            const groupName = document.getElementById(`team-${teamSide.toLowerCase()}-group`).value;
-            const rosterDiv = document.getElementById(`roster-${teamSide.toLowerCase()}`);
-            if(!groupName) { rosterDiv.innerHTML = '<p class="text-xs text-gray-400 text-center mt-10">Select a group first</p>'; return; }
+                // CRUD OPERATIONS
+                submitPlayerForm: async () => {
+                    const mode = document.getElementById('crud-mode').value;
+                    const id = document.getElementById('crud-id').value;
+                    
+                    const name = document.getElementById('pub-name').value;
+                    const age = document.getElementById('pub-age').value;
+                    const cat = document.getElementById('pub-cat').value;
+                    let group = document.getElementById('pub-group').value;
+                    if(group === 'NEW') group = document.getElementById('pub-group-custom').value;
+                    const games = Array.from(document.querySelectorAll('.pub-game:checked')).map(c => c.value);
 
-            const players = allPlayers.filter(p => p.group_name === groupName);
-            if(players.length === 0) { rosterDiv.innerHTML = '<p class="text-xs text-gray-400 text-center mt-4">No players in this group</p>'; return; }
+                    if(!name || !age || !group) return App.ui.toast('Please fill required fields', 'warning');
 
-            // Bubble UI
-            rosterDiv.innerHTML = `<div class="grid grid-cols-2 gap-2">` + players.map(p => {
-                const avatar = p.photo || `https://ui-avatars.com/api/?name=${p.name}&background=random`;
-                return `
-                <label class="relative cursor-pointer group">
-                    <input type="checkbox" class="player-checkbox roster-check-${teamSide} hidden" value="${p.name}">
-                    <div class="flex items-center gap-2 p-2 rounded-lg bg-slate-100 hover:bg-white border border-slate-200 transition-all shadow-sm">
-                        <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-gray-300 shadow-sm">
-                        <div class="flex flex-col overflow-hidden">
-                            <span class="text-xs font-bold text-slate-800 truncate leading-tight">${p.name}</span>
-                            <span class="text-[9px] text-gray-400 truncate sub-text">${p.category || 'Player'}</span>
-                        </div>
-                    </div>
-                </label>
-            `;
-            }).join('') + `</div>`;
-        }
+                    const playerData = {
+                        name, age, category: cat, group_name: group, games, 
+                        photo: App.state.tempPhoto || document.getElementById('pub-preview').src
+                    };
 
-        async function submitMatch() {
-            const btn = document.getElementById('btn-submit-match');
-            const game = document.getElementById('match-game-type').value;
-            const teamA = document.getElementById('team-a-group').value;
-            const teamB = document.getElementById('team-b-group').value;
-            const scoreA = parseInt(document.getElementById('score-a').value);
-            const scoreB = parseInt(document.getElementById('score-b').value);
+                    if(mode === 'create') {
+                        // Simulate ID creation
+                        playerData.id = Date.now();
+                        App.state.players.unshift(playerData); // Add to local state
+                        
+                        // DB Insert (Mocked for demo)
+                        // await db.from('players').insert([playerData]);
+                        
+                        App.ui.toast('Player Registered Successfully');
+                    } else {
+                        // Update
+                        const index = App.state.players.findIndex(p => p.id == id);
+                        if(index !== -1) {
+                            App.state.players[index] = { ...App.state.players[index], ...playerData };
+                            App.ui.toast('Player Updated');
+                        }
+                    }
 
-            const playersA = Array.from(document.querySelectorAll('.roster-check-A:checked')).map(c => c.value);
-            const playersB = Array.from(document.querySelectorAll('.roster-check-B:checked')).map(c => c.value);
+                    App.ui.toggleModal('public-reg-modal', false);
+                    App.state.tempPhoto = null;
+                    if(App.state.currentView === 'admin') App.logic.renderAdminTable();
+                    if(App.state.currentView === 'roster') App.logic.renderRoster();
+                    App.logic.populatePublicGroups();
+                },
 
-            if (!teamA || !teamB) return Swal.fire('Error', 'Select both groups.', 'error');
-            if (teamA === teamB) return Swal.fire('Error', 'Groups must be different.', 'warning');
-            if (playersA.length === 0 || playersB.length === 0) return Swal.fire('Error', 'Select at least one player per team.', 'warning');
+                deletePlayer: (id) => {
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You won't be able to revert this!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ff003c',
+                        cancelButtonColor: '#334155',
+                        confirmButtonText: 'Yes, delete it!',
+                        background: '#0f172a',
+                        color: '#fff'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            App.state.players = App.state.players.filter(p => p.id !== id);
+                            App.logic.renderAdminTable();
+                            App.ui.toast('Player Deleted', 'success');
+                        }
+                    })
+                },
 
-            btn.disabled = true; btn.innerHTML = '<span class="loader"></span> Saving...';
+                editPlayer: (id) => {
+                    const p = App.state.players.find(p => p.id === id);
+                    if(!p) return;
 
-            const { error } = await dbClient.from('matches').insert([{
-                game_type: game,
-                team_a_name: teamA, team_b_name: teamB,
-                score_a: scoreA, score_b: scoreB,
-                team_a_players: JSON.stringify(playersA),
-                team_b_players: JSON.stringify(playersB)
-            }]);
+                    document.getElementById('modal-title').innerText = "EDIT PLAYER";
+                    document.getElementById('crud-mode').value = 'edit';
+                    document.getElementById('crud-id').value = id;
+                    
+                    document.getElementById('pub-name').value = p.name;
+                    document.getElementById('pub-age').value = p.age;
+                    document.getElementById('pub-cat').value = p.category;
+                    
+                    // Handle Group Select
+                    const groupSel = document.getElementById('pub-group');
+                    // Check if group exists in options
+                    let groupExists = false;
+                    for(let i=0; i<groupSel.options.length; i++){
+                        if(groupSel.options[i].value === p.group_name) groupExists = true;
+                    }
+                    if(groupExists) {
+                        groupSel.value = p.group_name;
+                        document.getElementById('pub-group-custom').classList.add('hidden');
+                    } else {
+                        // It might be a new group or custom
+                        groupSel.value = 'NEW';
+                        document.getElementById('pub-group-custom').value = p.group_name;
+                        document.getElementById('pub-group-custom').classList.remove('hidden');
+                    }
 
-            btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check-double text-green-400"></i> FINALIZE MATCH';
+                    document.getElementById('pub-preview').src = p.photo;
+                    
+                    // Checkboxes
+                    document.querySelectorAll('.pub-game').forEach(c => c.checked = false);
+                    if(p.games) p.games.forEach(g => {
+                        const cb = document.querySelector(`.pub-game[value="${g}"]`);
+                        if(cb) cb.checked = true;
+                    });
 
-            if (error) {
-                Swal.fire('Database Error', error.message, 'error');
-            } else {
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                Swal.fire({ icon: 'success', title: 'Match Recorded!', text: `${teamA} vs ${teamB}` });
-                fetchMatchHistory();
-                document.getElementById('score-a').value = 0;
-                document.getElementById('score-b').value = 0;
-            }
-        }
+                    App.ui.toggleModal('public-reg-modal', true);
+                },
 
-        async function fetchMatchHistory() {
-            const { data, error } = await dbClient.from('matches').select('*').order('created_at', { ascending: false }).limit(10);
-            if (error || !data) return;
+                // Chat Simulation
+                simulateChat: () => {
+                    const messages = [
+                        "Let's go Team Alpha!", "Nice play!", "What is that build?", "GGWP", 
+                        "Who is winning?", "Stream lag?", "This MVP is crazy", "LOL", "Next match when?"
+                    ];
+                    const users = ["User123", "ProGamer", "Guest99", "Admin", "FanBoy"];
+                    
+                    setInterval(() => {
+                        if(Math.random() > 0.7 && App.state.currentView === 'live') {
+                            const msg = messages[Math.floor(Math.random() * messages.length)];
+                            const user = users[Math.floor(Math.random() * users.length)];
+                            App.logic.addChatMessage(user, msg);
+                        }
+                    }, 3000);
+                },
 
-            document.getElementById('matches-history').innerHTML = data.map(m => {
-                let p1List = "Team A";
-                let p2List = "Team B";
-                try {
-                    p1List = typeof m.team_a_players === 'string' ? JSON.parse(m.team_a_players).join(', ') : m.team_a_players;
-                    p2List = typeof m.team_b_players === 'string' ? JSON.parse(m.team_b_players).join(', ') : m.team_b_players;
-                } catch(e) {}
+                addChatMessage: (user, msg) => {
+                    const container = document.getElementById('chat-container');
+                    const color = user === 'Admin' ? 'text-cyber-pink' : 'text-cyber-cyan';
+                    const div = document.createElement('div');
+                    div.innerHTML = `<span class="font-bold ${color}">${user}:</span> <span class="text-slate-300 break-words">${msg}</span>`;
+                    container.appendChild(div);
+                    container.scrollTop = container.scrollHeight;
+                },
 
-                const winA = m.score_a > m.score_b ? "text-green-400 font-bold" : "text-gray-400";
-                const winB = m.score_b > m.score_a ? "text-green-400 font-bold" : "text-gray-400";
-
-                // Robust: Add Delete Button for Admin
-                const delBtn = isAdmin ? `<button onclick="deleteMatch(${m.id})" class="text-red-500 hover:text-white ml-2 text-xs"><i class="fa-solid fa-trash"></i></button>` : '';
-
-                return `
-                <div class="bg-slate-800 p-3 rounded text-sm border-l-4 ${m.score_a > m.score_b ? 'border-blue-500' : (m.score_b > m.score_a ? 'border-red-500' : 'border-gray-500')}">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[10px] text-orange-400 font-bold uppercase">${m.game_type}</span>
-                        <div class="flex items-center">
-                            <span class="text-[10px] text-gray-500">${new Date(m.created_at).toLocaleDateString()}</span>
-                            ${delBtn}
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <div class="text-left w-5/12">
-                            <div class="${winA} text-lg leading-none truncate">${m.team_a_name}</div>
-                            <div class="text-[10px] text-gray-500 truncate w-32">${p1List}</div>
-                        </div>
-                        <div class="font-mono bg-black/50 px-3 py-1 rounded text-white font-bold">
-                            ${m.score_a} - ${m.score_b}
-                        </div>
-                        <div class="text-right w-5/12">
-                            <div class="${winB} text-lg leading-none truncate">${m.team_b_name}</div>
-                            <div class="text-[10px] text-gray-500 truncate w-32 ml-auto">${p2List}</div>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        // Robust Feature: Delete Match
-        async function deleteMatch(id) {
-            const result = await Swal.fire({ title: 'Delete Match?', text: "Cannot be undone.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' });
-            if (result.isConfirmed) {
-                const { error } = await dbClient.from('matches').delete().eq('id', id);
-                if (!error) {
-                    Swal.fire('Deleted', 'Match removed.', 'success');
-                    fetchMatchHistory();
+                sendChat: () => {
+                    const input = document.getElementById('chat-input');
+                    if(input.value.trim()) {
+                        App.logic.addChatMessage('You', input.value);
+                        input.value = '';
+                    }
                 }
             }
-        }
+        };
 
-        // --- 6. EXTRAS ---
-        function updateMVP() {
-            // Mock Logic: Pick a random player as MVP for visual
-            if (allPlayers.length > 0) {
-                const randomP = allPlayers[Math.floor(Math.random() * allPlayers.length)];
-                document.getElementById('mvp-name').innerText = randomP.name;
-                const avatar = randomP.photo || `https://ui-avatars.com/api/?name=${randomP.name}&background=fbbf24&color=000`;
-                document.getElementById('mvp-img').src = avatar;
-            }
-        }
+        // Initialize
+        window.addEventListener('DOMContentLoaded', App.auth.init);
 
-        let broadcastScore = { h:0, a:0 };
-        function updateBroadCastScore(h, a) {
-            broadcastScore.h = Math.max(0, broadcastScore.h + h);
-            broadcastScore.a = Math.max(0, broadcastScore.a + a);
-            document.getElementById('sb-home-score').innerText = broadcastScore.h;
-            document.getElementById('sb-away-score').innerText = broadcastScore.a;
-        }
-
-        function updateTeamNames() {
-            const h = document.getElementById('input-home-name').value;
-            const a = document.getElementById('input-away-name').value;
-            if(h) document.getElementById('sb-home-name').innerText = h;
-            if(a) document.getElementById('sb-away-name').innerText = a;
-        }
-
-        function setupChart() {
-            const ctx = document.getElementById('performanceChart').getContext('2d');
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels: [], datasets: [{ label: 'Rating', data: [], borderColor: '#22c55e', tension: 0.4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: 'rgba(255,255,255,0.1)' } } } }
-            });
-        }
-        function updateChart() {
-            const labels = ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5'];
-            const data = Array.from({length: 5}, () => Math.floor(Math.random() * 500) + 1000);
-            myChart.data.labels = labels;
-            myChart.data.datasets[0].data = data;
-            myChart.update();
-            document.getElementById('current-rating').innerText = data[data.length-1];
-        }
-
-        init();
     </script>
 </body>
 </html>
